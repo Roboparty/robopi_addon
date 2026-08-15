@@ -1,0 +1,14 @@
+Source: roboparty-ws2812
+Section: electronics
+Priority: optional
+Maintainer: RoboParty <2321901849@qq.com>
+Build-Depends: debhelper-compat (= 12)
+Standards-Version: 4.5.1
+Rules-Requires-Root: no
+
+Package: roboparty-ws2812
+Architecture: arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Experimental RK3588S PWM6_M1 WS2812 controller
+ Controls an 18-pixel WS2812 strip from PWM6_M1 on the RoboParty RK3588S
+ board. Provides solid, flash, chase, rainbow, and demo effects.

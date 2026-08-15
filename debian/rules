@@ -1,0 +1,24 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/architecture.mk
+
+ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
+WS2812_CC := gcc
+else
+WS2812_CC := $(DEB_HOST_GNU_TYPE)-gcc
+endif
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	install -d build
+	$(WS2812_CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -O3 -Wall -Wextra \
+		-o build/roboparty-ws2812 src/ws2812_pwm6.c -lm
+
+override_dh_auto_clean:
+	rm -rf build
+
+override_dh_auto_install:
+	install -D -m 0755 build/roboparty-ws2812 \
+		debian/roboparty-ws2812/usr/bin/roboparty-ws2812

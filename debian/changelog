@@ -1,0 +1,28 @@
+roboparty-ws2812 (1.1.1-1) stable; urgency=medium
+
+  * Accept the period-zero state of a newly exported PWM channel.
+  * Keep stale-duty handling for PWM channels configured by earlier users.
+
+ -- RoboParty <2321901849@qq.com>  Sat, 15 Aug 2026 15:00:00 +0800
+
+roboparty-ws2812 (1.1.0-1) stable; urgency=medium
+
+  * Remove device-tree overlay management from the standalone package.
+  * Document all effects and configurable command parameters.
+
+ -- RoboParty <2321901849@qq.com>  Sat, 15 Aug 2026 14:00:00 +0800
+
+roboparty-ws2812 (1.0.1-1) stable; urgency=medium
+
+  * Clear stale PWM duty before changing the bootstrap period.
+  * Use the board-validated 100 ms PWM6 bootstrap period.
+
+ -- RoboParty <2321901849@qq.com>  Sat, 15 Aug 2026 13:00:00 +0800
+
+roboparty-ws2812 (1.0.0-1) stable; urgency=medium
+
+  * Initial standalone package.
+  * Add 18-pixel PWM6_M1 WS2812 controller.
+  * Add no-HDMI PWM6_M1 device-tree overlay and configuration utilities.
+
+ -- RoboParty <2321901849@qq.com>  Sat, 15 Aug 2026 12:00:00 +0800
