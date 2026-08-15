@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = remove ] || [ "$1" = deconfigure ]; then
+    modprobe -r roboparty_ws2812 2>/dev/null || true
+fi
+
+#DEBHELPER#
+exit 0

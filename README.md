@@ -12,14 +12,15 @@ be enabled by the system.
 ## What's included
 
 - `roboparty-ws2812` command-line controller
+- `roboparty_ws2812` kernel transmitter and `/dev/roboparty-ws2812`
 - Solid color, flash, chase, rainbow, and demo effects
 - Native ARM64 and amd64-to-ARM64 cross-build support
 - Debian packaging for installation and removal
 
 ## Commands
 
-The program requires root privileges because it accesses `/dev/mem` and the
-PWM sysfs interface.
+The program sends GRB frames through `/dev/roboparty-ws2812`; the kernel
+module generates the validated 800 kHz PWM6_M1 waveform.
 
 ```bash
 # Turn on with the default dim white color (48, 48, 48)
@@ -70,7 +71,7 @@ Start with low RGB values such as `16-64` to avoid excessive power draw.
 Build natively on the ARM64 board:
 
 ```bash
-sudo apt install build-essential debhelper
+sudo apt install build-essential debhelper linux-headers-$(uname -r)
 chmod +x build-deb.sh
 ./build-deb.sh
 ```

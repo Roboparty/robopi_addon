@@ -12,13 +12,16 @@ endif
 	dh $@
 
 override_dh_auto_build:
-	install -d build
-	$(WS2812_CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -O3 -Wall -Wextra \
-		-o build/roboparty-ws2812 src/ws2812_pwm6.c -lm
+	$(MAKE) CC=$(WS2812_CC) CFLAGS="$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -O3 -Wall -Wextra" all
 
 override_dh_auto_clean:
-	rm -rf build
+	$(MAKE) clean
 
 override_dh_auto_install:
-	install -D -m 0755 build/roboparty-ws2812 \
-		debian/roboparty-ws2812/usr/bin/roboparty-ws2812
+	$(MAKE) DESTDIR=$(CURDIR)/debian/roboparty-ws2812 install
+
+override_dh_installsystemd:
+	dh_installsystemd --no-enable --no-start
+
+override_dh_strip:
+	dh_strip -X.ko

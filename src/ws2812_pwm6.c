@@ -1,142 +1,45 @@
-// RK3588S PWM6_M1 (GPIO4_C1) experimental WS2812 controller, 18 LEDs.
-// Target: pwm@febd0020, 24 MHz clock, /sys/class/pwm/pwmchip2.
+// RoboPi2 RK3588S PWM6_M1 (GPIO4_C1) WS2812 controller, 18 LEDs.
+// Frames are transmitted by the roboparty_ws2812 kernel module.
 // Build: gcc -O3 -Wall -Wextra -o ws2812_pwm6 ws2812_pwm6.c -lm
 // Run:   sudo roboparty-ws2812 <off|on|solid|flash|chase|rainbow|demo> [args]
 //
-// This userspace PWM oneshot backend is experimental. Scope validation is
-// required for each board/LED combination; it is not enabled automatically.
-
-#define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
 #include <math.h>
-#include <sched.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <time.h>
 #include <unistd.h>
 
 #define LED_COUNT       18
 #define FRAME_BYTES     (LED_COUNT * 3)
-#define PWM6_ADDR       0xfebd0020u
-#define PWMCHIP_DIR     "/sys/class/pwm/pwmchip2"
-#define PWM_DIR         PWMCHIP_DIR "/pwm0"
+#define DEVICE_PATH     "/dev/roboparty-ws2812"
 
-#define PWM_PERIOD      0x04
-#define PWM_DUTY        0x08
-#define PWM_CTRL        0x0c
-
-#define PWM_ENABLE      (1u << 0)
-#define PWM_DUTY_POS    (1u << 3)
-#define PWM_OUT_L       (1u << 5)
-#define PWM_LP_DIS      (1u << 8)
-#define PWM_SCALED_CLK  (1u << 9)
-#define PWM_SCALE_1     (1u << 16)
-#define ONESHOT_CTRL    (PWM_ENABLE | PWM_DUTY_POS | PWM_OUT_L | \
-                         PWM_LP_DIS | PWM_SCALED_CLK | PWM_SCALE_1)
-
-static volatile uint32_t *pwm;
 static volatile sig_atomic_t running = 1;
-static int pwm_exported_by_us;
-static uint32_t period_ticks = 30; // 24 MHz: 1.25 us
-static uint32_t zero_ticks = 8;    // 0.333 us high
-static uint32_t one_ticks = 19;    // 0.792 us high
+static int device_fd = -1;
 
 static void on_signal(int sig) { (void)sig; running = 0; }
 
-static int write_text(const char *path, const char *text) {
-    int fd = open(path, O_WRONLY);
-    if (fd < 0) return -1;
-    ssize_t len = (ssize_t)strlen(text);
-    ssize_t n = write(fd, text, (size_t)len);
-    int saved = errno;
-    close(fd);
-    errno = saved;
-    return n == len ? 0 : -1;
-}
-
-static int wait_for_path(const char *path) {
-    for (int i = 0; i < 100; ++i) {
-        if (access(path, F_OK) == 0) return 0;
-        usleep(10000);
-    }
-    return -1;
-}
-
-static int pwm_clock_on(void) {
-    if (access(PWM_DIR, F_OK) != 0) {
-        if (write_text(PWMCHIP_DIR "/export", "0") != 0 && errno != EBUSY) {
-            perror("export pwmchip2/pwm0");
-            return -1;
-        }
-        pwm_exported_by_us = 1;
-    }
-    if (wait_for_path(PWM_DIR "/period") != 0) {
-        fprintf(stderr, "PWM sysfs interface did not appear\n");
+static int open_backend(void) {
+    device_fd = open(DEVICE_PATH, O_WRONLY | O_CLOEXEC);
+    if (device_fd < 0) {
+        perror("open " DEVICE_PATH);
+        fprintf(stderr, "Kernel module is unavailable; try: sudo modprobe roboparty_ws2812\n");
         return -1;
     }
-
-    // Let the kernel enable the PWM clock and select PWM6_M1 pinctrl.
-    write_text(PWM_DIR "/enable", "0");
-    // Clear a duty left by an earlier sysfs user before reducing the period.
-    // The board PWM driver has already been validated with this 100 ms
-    // bootstrap period. MMIO replaces it before any LED data is sent.
-    // A newly exported channel can report period=0 and reject even duty=0
-    // with EINVAL. That state is safe: set the period first. For a channel
-    // left configured by an earlier user, clearing duty succeeds and allows
-    // the period to be changed safely.
-    if (write_text(PWM_DIR "/duty_cycle", "0") != 0 && errno != EINVAL) {
-        perror("clear bootstrap duty");
-        return -1;
-    }
-    if (write_text(PWM_DIR "/period", "100000000") != 0) { perror("set bootstrap period"); return -1; }
-    if (write_text(PWM_DIR "/duty_cycle", "50000000") != 0) { perror("set bootstrap duty"); return -1; }
-    if (write_text(PWM_DIR "/enable", "1") != 0) { perror("enable pwmchip2/pwm0"); return -1; }
     return 0;
-}
-
-static int map_pwm(void) {
-    int fd = open("/dev/mem", O_RDWR | O_SYNC);
-    if (fd < 0) { perror("open /dev/mem"); return -1; }
-    uintptr_t page = PWM6_ADDR & ~0xfffu;
-    void *base = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE,
-                      MAP_SHARED, fd, (off_t)page);
-    close(fd);
-    if (base == MAP_FAILED) { perror("mmap PWM6"); return -1; }
-    pwm = (volatile uint32_t *)((uintptr_t)base + (PWM6_ADDR & 0xfff));
-    pwm[PWM_CTRL / 4] = 0;
-    return 0;
-}
-
-static void pwm_clock_off(void) {
-    if (pwm) pwm[PWM_CTRL / 4] = 0;
-    write_text(PWM_DIR "/enable", "0");
-    if (pwm_exported_by_us) write_text(PWMCHIP_DIR "/unexport", "0");
 }
 
 static int send_frame(const uint8_t frame[FRAME_BYTES]) {
-    pwm[PWM_PERIOD / 4] = period_ticks;
-    for (int i = 0; i < FRAME_BYTES; ++i) {
-        for (int bit = 7; bit >= 0; --bit) {
-            pwm[PWM_DUTY / 4] = (frame[i] & (1u << bit)) ? one_ticks : zero_ticks;
-            __sync_synchronize();
-            pwm[PWM_CTRL / 4] = ONESHOT_CTRL;
-            int timeout = 100000;
-            while ((pwm[PWM_CTRL / 4] & PWM_ENABLE) && --timeout) { }
-            if (!timeout) {
-                fprintf(stderr, "PWM6 oneshot timeout; clock or pinmux is unavailable\n");
-                pwm[PWM_CTRL / 4] = 0;
-                return -1;
-            }
-        }
+    ssize_t n;
+    do { n = write(device_fd, frame, FRAME_BYTES); } while (n < 0 && errno == EINTR);
+    if (n != FRAME_BYTES) {
+        if (n < 0) perror("write " DEVICE_PATH);
+        else fprintf(stderr, "Short WS2812 frame write: %zd/%d bytes\n", n, FRAME_BYTES);
+        return -1;
     }
-    pwm[PWM_CTRL / 4] = 0;
-    usleep(80); // WS2812 reset/latch, >50 us
     return 0;
 }
 
@@ -199,11 +102,7 @@ int main(int argc, char **argv) {
     }
     if (geteuid() != 0) { fprintf(stderr, "Run with sudo.\n"); return 1; }
     signal(SIGINT, on_signal); signal(SIGTERM, on_signal);
-    if (pwm_clock_on() || map_pwm()) { pwm_clock_off(); return 1; }
-
-    struct sched_param sp = { .sched_priority = 80 };
-    sched_setscheduler(0, SCHED_FIFO, &sp);
-    setpriority(PRIO_PROCESS, 0, -20);
+    if (open_backend()) return 1;
 
     uint8_t f[FRAME_BYTES] = {0};
     const char *cmd = argv[1];
@@ -254,9 +153,9 @@ int main(int argc, char **argv) {
 
 out:
     // Interrupting an animation always leaves the strip safely off.
-    if ((!strcmp(cmd,"flash") || !strcmp(cmd,"chase") || !strcmp(cmd,"rainbow")) && pwm) {
+    if ((!strcmp(cmd,"flash") || !strcmp(cmd,"chase") || !strcmp(cmd,"rainbow")) && device_fd >= 0) {
         memset(f,0,sizeof(f)); send_frame(f);
     }
-    pwm_clock_off();
+    close(device_fd);
     return rc;
 }

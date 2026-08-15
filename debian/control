@@ -8,7 +8,8 @@ Rules-Requires-Root: no
 
 Package: roboparty-ws2812
 Architecture: arm64
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Experimental RK3588S PWM6_M1 WS2812 controller
+Depends: ${shlibs:Depends}, ${misc:Depends}, kmod
+Description: RoboPi RK3588S WS2812 and SIG/key GPIO helpers
  Controls an 18-pixel WS2812 strip from PWM6_M1 on the RoboParty RK3588S
- board. Provides solid, flash, chase, rainbow, and demo effects.
+ board through a kernel PWM transmitter. Also provides SIG-controlled LED output and gated key handling for
+ GPIO3_B1, GPIO3_B6, and GPIO3_B4.
