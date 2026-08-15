@@ -17,7 +17,8 @@
 static volatile sig_atomic_t running = 1;
 
 struct options {
-    const char *chip;
+    const char *sig_chip;
+    const char *led_chip;
     unsigned sig_offset;
     unsigned led_offset;
     bool sig_active_low;
@@ -35,9 +36,10 @@ static void stop_handler(int signo)
 static void usage(const char *name)
 {
     printf("Usage: %s [options]\n"
-           "  --chip PATH          GPIO chip (default: /dev/gpiochip3)\n"
-           "  --sig N              SIG line offset (default: 9 = GPIO3_B1)\n"
-           "  --led N              LED line offset (default: 14 = GPIO3_B6)\n"
+           "  --sig-chip PATH      SIG GPIO chip (default: /dev/gpiochip1)\n"
+           "  --led-chip PATH      LED GPIO chip (default: /dev/gpiochip0)\n"
+           "  --sig N              SIG offset (default: 29 = GPIO1_D5)\n"
+           "  --led N              LED offset (default: 18 = GPIO0_C2)\n"
            "  --sig-active-low     invert SIG logical level\n"
            "  --led-active-low     invert LED electrical level\n"
            "  --debounce-ms N      key debounce time (default: 30)\n"
@@ -133,14 +135,16 @@ static void run_press_command(const char *command)
 int main(int argc, char **argv)
 {
     struct options opt = {
-        .chip = "/dev/gpiochip3",
-        .sig_offset = 9,   /* GPIO3_B1, button SIG, high when pressed */
-        .led_offset = 14,  /* GPIO3_B6 */
+        .sig_chip = "/dev/gpiochip1",
+        .led_chip = "/dev/gpiochip0",
+        .sig_offset = 29,  /* GPIO1_D5, button SIG, high when pressed */
+        .led_offset = 18,  /* GPIO0_C2, LED, high when on */
         .debounce_ms = 30,
     };
 
     for (int i = 1; i < argc; ++i) {
-        if (!strcmp(argv[i], "--chip") && i + 1 < argc) opt.chip = argv[++i];
+        if (!strcmp(argv[i], "--sig-chip") && i + 1 < argc) opt.sig_chip = argv[++i];
+        else if (!strcmp(argv[i], "--led-chip") && i + 1 < argc) opt.led_chip = argv[++i];
         else if (!strcmp(argv[i], "--sig") && i + 1 < argc) opt.sig_offset = parse_u32(argv[++i], "SIG offset");
         else if (!strcmp(argv[i], "--led") && i + 1 < argc) opt.led_offset = parse_u32(argv[++i], "LED offset");
         else if (!strcmp(argv[i], "--debounce-ms") && i + 1 < argc) opt.debounce_ms = parse_u32(argv[++i], "debounce time");
@@ -155,15 +159,21 @@ int main(int argc, char **argv)
     signal(SIGTERM, stop_handler);
     signal(SIGCHLD, SIG_IGN);
 
-    int chip_fd = open(opt.chip, O_RDONLY | O_CLOEXEC);
-    if (chip_fd < 0) {
-        fprintf(stderr, "Cannot open %s: %s\n", opt.chip, strerror(errno));
+    int sig_chip_fd = open(opt.sig_chip, O_RDONLY | O_CLOEXEC);
+    if (sig_chip_fd < 0) {
+        fprintf(stderr, "Cannot open %s: %s\n", opt.sig_chip, strerror(errno));
+        return EXIT_FAILURE;
+    }
+    int led_chip_fd = open(opt.led_chip, O_RDONLY | O_CLOEXEC);
+    if (led_chip_fd < 0) {
+        fprintf(stderr, "Cannot open %s: %s\n", opt.led_chip, strerror(errno));
+        close(sig_chip_fd);
         return EXIT_FAILURE;
     }
 
-    int sig_fd = request_input_events(chip_fd, opt.sig_offset,
+    int sig_fd = request_input_events(sig_chip_fd, opt.sig_offset,
                                       opt.sig_active_low, "sig-led-sig");
-    int led_fd = request_output(chip_fd, opt.led_offset,
+    int led_fd = request_output(led_chip_fd, opt.led_offset,
                                 opt.led_active_low, "sig-led-led");
     if (sig_fd < 0 || led_fd < 0) {
         if (led_fd >= 0) set_value(led_fd, 0);
@@ -212,6 +222,7 @@ int main(int argc, char **argv)
     set_value(led_fd, 0);
     close(led_fd);
     close(sig_fd);
-    close(chip_fd);
+    close(led_chip_fd);
+    close(sig_chip_fd);
     return 0;
 }

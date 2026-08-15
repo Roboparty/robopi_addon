@@ -4,8 +4,8 @@
 
 | 功能 | GPIO | gpiochip3 偏移 | 有效电平 |
 |---|---|---:|---|
-| 按键 SIG 输入 | GPIO3_B1 | 9 | 高有效 |
-| LED 输出 | GPIO3_B6 | 14 | 高有效 |
+| 按键 SIG 输入 | GPIO1_D5 | gpiochip1 offset 29 | 高有效 |
+| LED 输出 | GPIO0_C2 | gpiochip0 offset 18 | 高有效 |
 
 按键未按下时，R2 将 SIG 下拉为低电平；按下 SW2 后，VCC 经过 R1 接到
 SIG，使其变为高电平。C1 用于硬件滤波。程序检测到 SIG 为高时点亮 LED，
@@ -67,5 +67,5 @@ journalctl -u robopi-sig-key.service -f
 默认服务命令为：
 
 ```text
-/usr/bin/robopi-sig-key --chip /dev/gpiochip3 --sig 9 --led 14
+/usr/bin/robopi-sig-key --sig-chip /dev/gpiochip1 --sig 29 --led-chip /dev/gpiochip0 --led 18
 ```
