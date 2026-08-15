@@ -1,81 +1,71 @@
-# SIG、LED 与按键联动
+# SIG 按键与 LED 联动
 
-`robopi_addon` 现在会同时生成两个程序：
+原理图只有两路 GPIO：
 
-- `roboparty-ws2812`：原有的 WS2812 灯带程序。
-- `robopi-sig-key`：新增的 SIG 检测、LED 控制和按键门控程序。
-
-## 默认引脚
-
-| 功能 | GPIO | gpiochip3 偏移 | 默认有效电平 |
+| 功能 | GPIO | gpiochip3 偏移 | 有效电平 |
 |---|---|---:|---|
-| SIG 输入 | GPIO3_B1 | 9 | 高有效 |
+| 按键 SIG 输入 | GPIO3_B1 | 9 | 高有效 |
 | LED 输出 | GPIO3_B6 | 14 | 高有效 |
-| 按键输入 | GPIO3_B4 | 12 | 低有效 |
 
-程序逻辑如下：SIG 有效时 LED 点亮；SIG 无效时 LED 熄灭；只有 SIG 有效、LED 点亮期间按键才有效。有效按键会输出 `KEY_PRESSED`，也可以启动指定命令。
+按键未按下时，R2 将 SIG 下拉为低电平；按下 SW2 后，VCC 经过 R1 接到
+SIG，使其变为高电平。C1 用于硬件滤波。程序检测到 SIG 为高时点亮 LED，
+并输出一次 `KEY_PRESSED`；SIG 恢复低电平时熄灭 LED。
 
-## 编译与直接运行
+> 原理图中的 VCC 必须为 3.3V，不允许向 RK3588 GPIO 输入 5V。
 
-```bash
-cd robopi_addon
-make
-sudo ./build/robopi-sig-key
-```
-
-按键有效时启动业务程序：
+## 前台测试
 
 ```bash
-sudo ./build/robopi-sig-key --on-press '/opt/my-app/start.sh'
+sudo robopi-sig-key
 ```
 
-GPIO3_B5 的偏移是 13。如果按键接在 B5：
+正常启动会显示当前状态：
+
+```text
+Started: SIG=0, LED=0. Button is active when SIG is high.
+```
+
+按下按键时应显示：
+
+```text
+SIG active -> LED on
+KEY_PRESSED
+```
+
+松开按键时应显示：
+
+```text
+SIG inactive -> LED off
+```
+
+按 `Ctrl+C` 退出，程序会关闭 LED。
+
+## 参数
 
 ```bash
-sudo ./build/robopi-sig-key --key 13
+robopi-sig-key --help
+sudo robopi-sig-key --debounce-ms 30
+sudo robopi-sig-key --on-press '/opt/my-app/start.sh'
 ```
 
-其他常用配置：
+如果硬件电平极性不同，可以使用：
 
 ```bash
-# LED 低电平点亮
-sudo ./build/robopi-sig-key --led-active-low
-
-# SIG 低有效
-sudo ./build/robopi-sig-key --sig-active-low
-
-# 按键高电平有效
-sudo ./build/robopi-sig-key --key-active-high
+sudo robopi-sig-key --sig-active-low
+sudo robopi-sig-key --led-active-low
 ```
 
-## Debian 包与开机服务
+## systemd 服务
 
-构建并安装项目原有的 Debian 包后，两个程序和 `robopi-sig-key.service` 都会被安装。服务不会在安装时强制启动，需要确认接线后手动启用：
+确认前台测试正确后再启用：
 
 ```bash
 sudo systemctl enable --now robopi-sig-key.service
 journalctl -u robopi-sig-key.service -f
 ```
 
-如果需要按键启动业务程序，执行：
+默认服务命令为：
 
-```bash
-sudo systemctl edit robopi-sig-key.service
+```text
+/usr/bin/robopi-sig-key --chip /dev/gpiochip3 --sig 9 --led 14
 ```
-
-填入：
-
-```ini
-[Service]
-ExecStart=
-ExecStart=/usr/bin/robopi-sig-key --chip /dev/gpiochip3 --sig 9 --led 14 --key 12 --on-press /opt/my-app/start.sh
-```
-
-然后运行：
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart robopi-sig-key.service
-```
-
-注意：GPIO 只能使用 3.3 V 电平。默认按键接在 GPIO3_B4 和 GND 之间，并通过约 10 kΩ 上拉到 3.3 V。

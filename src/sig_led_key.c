@@ -20,10 +20,8 @@ struct options {
     const char *chip;
     unsigned sig_offset;
     unsigned led_offset;
-    unsigned key_offset;
     bool sig_active_low;
     bool led_active_low;
-    bool key_active_low;
     unsigned debounce_ms;
     const char *on_press;
 };
@@ -40,10 +38,8 @@ static void usage(const char *name)
            "  --chip PATH          GPIO chip (default: /dev/gpiochip3)\n"
            "  --sig N              SIG line offset (default: 9 = GPIO3_B1)\n"
            "  --led N              LED line offset (default: 14 = GPIO3_B6)\n"
-           "  --key N              key line offset (default: 12 = GPIO3_B4)\n"
            "  --sig-active-low     invert SIG logical level\n"
            "  --led-active-low     invert LED electrical level\n"
-           "  --key-active-high    key press is high instead of low\n"
            "  --debounce-ms N      key debounce time (default: 30)\n"
            "  --on-press COMMAND   run COMMAND for each valid key press\n"
            "  -h, --help           show this help\n", name);
@@ -138,10 +134,8 @@ int main(int argc, char **argv)
 {
     struct options opt = {
         .chip = "/dev/gpiochip3",
-        .sig_offset = 9,   /* GPIO3_B1 */
+        .sig_offset = 9,   /* GPIO3_B1, button SIG, high when pressed */
         .led_offset = 14,  /* GPIO3_B6 */
-        .key_offset = 12,  /* GPIO3_B4 */
-        .key_active_low = true,
         .debounce_ms = 30,
     };
 
@@ -149,12 +143,10 @@ int main(int argc, char **argv)
         if (!strcmp(argv[i], "--chip") && i + 1 < argc) opt.chip = argv[++i];
         else if (!strcmp(argv[i], "--sig") && i + 1 < argc) opt.sig_offset = parse_u32(argv[++i], "SIG offset");
         else if (!strcmp(argv[i], "--led") && i + 1 < argc) opt.led_offset = parse_u32(argv[++i], "LED offset");
-        else if (!strcmp(argv[i], "--key") && i + 1 < argc) opt.key_offset = parse_u32(argv[++i], "key offset");
         else if (!strcmp(argv[i], "--debounce-ms") && i + 1 < argc) opt.debounce_ms = parse_u32(argv[++i], "debounce time");
         else if (!strcmp(argv[i], "--on-press") && i + 1 < argc) opt.on_press = argv[++i];
         else if (!strcmp(argv[i], "--sig-active-low")) opt.sig_active_low = true;
         else if (!strcmp(argv[i], "--led-active-low")) opt.led_active_low = true;
-        else if (!strcmp(argv[i], "--key-active-high")) opt.key_active_low = false;
         else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) { usage(argv[0]); return 0; }
         else { usage(argv[0]); return EXIT_FAILURE; }
     }
@@ -171,11 +163,9 @@ int main(int argc, char **argv)
 
     int sig_fd = request_input_events(chip_fd, opt.sig_offset,
                                       opt.sig_active_low, "sig-led-sig");
-    int key_fd = request_input_events(chip_fd, opt.key_offset,
-                                      opt.key_active_low, "sig-led-key");
     int led_fd = request_output(chip_fd, opt.led_offset,
                                 opt.led_active_low, "sig-led-led");
-    if (sig_fd < 0 || key_fd < 0 || led_fd < 0) {
+    if (sig_fd < 0 || led_fd < 0) {
         if (led_fd >= 0) set_value(led_fd, 0);
         return EXIT_FAILURE;
     }
@@ -186,21 +176,20 @@ int main(int argc, char **argv)
         set_value(led_fd, 0);
         return EXIT_FAILURE;
     }
-    printf("Started: SIG=%d, LED=%d. Key is enabled only while SIG is active.\n",
+    printf("Started: SIG=%d, LED=%d. Button is active when SIG is high.\n",
            sig_level, sig_level);
     fflush(stdout);
 
-    struct pollfd fds[2] = {{.fd = sig_fd, .events = POLLIN},
-                            {.fd = key_fd, .events = POLLIN}};
+    struct pollfd fd = {.fd = sig_fd, .events = POLLIN};
     uint64_t last_press_ms = 0;
     while (running) {
-        int rc = poll(fds, 2, 500);
+        int rc = poll(&fd, 1, 500);
         if (rc < 0) {
             if (errno == EINTR) continue;
             fprintf(stderr, "poll failed: %s\n", strerror(errno));
             break;
         }
-        if (fds[0].revents & POLLIN) {
+        if (fd.revents & POLLIN) {
             struct gpioevent_data event;
             ssize_t count = read(sig_fd, &event, sizeof(event));
             if (count != (ssize_t)sizeof(event)) break;
@@ -209,14 +198,8 @@ int main(int argc, char **argv)
             printf("SIG %s -> LED %s\n", sig_level ? "active" : "inactive",
                    sig_level ? "on" : "off");
             fflush(stdout);
-        }
-        if (fds[1].revents & POLLIN) {
-            struct gpioevent_data event;
-            ssize_t count = read(key_fd, &event, sizeof(event));
-            if (count != (ssize_t)sizeof(event)) break;
-            int pressed = get_value(key_fd);
             uint64_t now = monotonic_ms();
-            if (pressed == 1 && sig_level == 1 &&
+            if (sig_level == 1 &&
                 (last_press_ms == 0 || now - last_press_ms >= opt.debounce_ms)) {
                 last_press_ms = now;
                 puts("KEY_PRESSED");
@@ -228,9 +211,7 @@ int main(int argc, char **argv)
 
     set_value(led_fd, 0);
     close(led_fd);
-    close(key_fd);
     close(sig_fd);
     close(chip_fd);
     return 0;
 }
-
