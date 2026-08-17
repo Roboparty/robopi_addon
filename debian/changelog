@@ -1,70 +1,77 @@
-roboparty-ws2812 (1.4.0-1) stable; urgency=medium
+robopi-addon (1.5.0-1) stable; urgency=medium
+
+  * Build and install the kernel module through DKMS instead of shipping
+    a prebuilt .ko for the running kernel.
+
+ -- wentywenty <2321901849@qq.com>  Mon, 17 Aug 2026 18:30:00 +0800
+
+robopi-addon (1.4.0-1) stable; urgency=medium
 
   * Trigger the GPIO0_C2 LED on GPIO1_D5 rising-edge events.
   * Keep the LED latched on by default and add configurable auto-off timing.
 
- -- RoboParty <2321901849@qq.com>  Mon, 17 Aug 2026 11:00:00 +0800
+ -- fanxiaobinggit <16692712013@163.com>  Mon, 17 Aug 2026 11:00:00 +0800
 
-roboparty-ws2812 (1.3.3-1) stable; urgency=medium
+robopi-addon (1.3.3-1) stable; urgency=medium
 
   * Disable the SoC bias on SIG so the external 100k pull-down defines idle.
 
- -- RoboParty <2321901849@qq.com>  Sat, 15 Aug 2026 20:00:00 +0800
+ -- fanxiaobinggit <16692712013@163.com>  Sat, 15 Aug 2026 20:00:00 +0800
 
-roboparty-ws2812 (1.3.2-1) stable; urgency=medium
+robopi-addon (1.3.2-1) stable; urgency=medium
 
   * Map button SIG to GPIO1_D5 and LED to GPIO0_C2.
   * Support separate gpiochips for the SIG input and LED output.
 
- -- RoboParty <2321901849@qq.com>  Sat, 15 Aug 2026 19:45:00 +0800
+ -- fanxiaobinggit <16692712013@163.com>  Sat, 15 Aug 2026 19:45:00 +0800
 
-roboparty-ws2812 (1.3.1-1) stable; urgency=medium
+robopi-addon (1.3.1-1) stable; urgency=medium
 
   * Match the button schematic: SIG is the high-active button input.
   * Drive the LED directly from SIG and remove the nonexistent key GPIO.
 
- -- RoboParty <2321901849@qq.com>  Sat, 15 Aug 2026 19:30:00 +0800
+ -- fanxiaobinggit <16692712013@163.com>  Sat, 15 Aug 2026 19:30:00 +0800
 
-roboparty-ws2812 (1.3.0-1) stable; urgency=medium
+robopi-addon (1.3.0-1) stable; urgency=medium
 
   * Add the validated PWM6_M1 kernel WS2812 frame transmitter.
   * Replace the blocked /dev/mem backend with /dev/roboparty-ws2812.
   * Load the kernel module automatically while retaining SIG/key helpers.
 
- -- RoboParty <2321901849@qq.com>  Sat, 15 Aug 2026 19:00:00 +0800
+ -- fanxiaobinggit <16692712013@163.com>  Sat, 15 Aug 2026 19:00:00 +0800
 
-roboparty-ws2812 (1.2.0-1) stable; urgency=medium
+robopi-addon (1.2.0-1) stable; urgency=medium
 
   * Add robopi-sig-key for SIG-controlled LED and gated key handling.
   * Install a disabled-by-default systemd service for continuous operation.
 
- -- RoboParty <2321901849@qq.com>  Sat, 15 Aug 2026 18:00:00 +0800
+ -- fanxiaobinggit <16692712013@163.com>  Sat, 15 Aug 2026 18:00:00 +0800
 
-roboparty-ws2812 (1.1.1-1) stable; urgency=medium
+robopi-addon (1.1.1-1) stable; urgency=medium
 
   * Accept the period-zero state of a newly exported PWM channel.
   * Keep stale-duty handling for PWM channels configured by earlier users.
 
- -- RoboParty <2321901849@qq.com>  Sat, 15 Aug 2026 15:00:00 +0800
+ -- fanxiaobinggit <16692712013@163.com>  Sat, 15 Aug 2026 15:00:00 +0800
 
-roboparty-ws2812 (1.1.0-1) stable; urgency=medium
+robopi-addon (1.1.0-1) stable; urgency=medium
 
   * Remove device-tree overlay management from the standalone package.
   * Document all effects and configurable command parameters.
 
- -- RoboParty <2321901849@qq.com>  Sat, 15 Aug 2026 14:00:00 +0800
+ -- fanxiaobinggit <16692712013@163.com>  Sat, 15 Aug 2026 14:00:00 +0800
 
-roboparty-ws2812 (1.0.1-1) stable; urgency=medium
+robopi-addon (1.0.1-1) stable; urgency=medium
 
   * Clear stale PWM duty before changing the bootstrap period.
   * Use the board-validated 100 ms PWM6 bootstrap period.
 
- -- RoboParty <2321901849@qq.com>  Sat, 15 Aug 2026 13:00:00 +0800
+ -- fanxiaobinggit <16692712013@163.com>  Sat, 15 Aug 2026 13:00:00 +0800
 
-roboparty-ws2812 (1.0.0-1) stable; urgency=medium
+robopi-addon (1.0.0-1) stable; urgency=medium
 
   * Initial standalone package.
   * Add 18-pixel PWM6_M1 WS2812 controller.
   * Add no-HDMI PWM6_M1 device-tree overlay and configuration utilities.
 
- -- RoboParty <2321901849@qq.com>  Sat, 15 Aug 2026 12:00:00 +0800
+ -- fanxiaobinggit <16692712013@163.com>  Sat, 15 Aug 2026 12:00:00 +0800

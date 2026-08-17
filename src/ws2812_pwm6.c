@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0
+// Copyright (C) 2025-2026 fanxiaobinggit
 // RoboPi2 RK3588S PWM6_M1 (GPIO4_C1) WS2812 controller, 18 LEDs.
 // Frames are transmitted by the roboparty_ws2812 kernel module.
 // Build: gcc -O3 -Wall -Wextra -o ws2812_pwm6 ws2812_pwm6.c -lm

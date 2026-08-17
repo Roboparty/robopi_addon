@@ -1,17 +1,22 @@
-# roboparty-ws2812
+# robopi-addon
 
 [English](README.md)
 
-RoboParty RK3588S 平台的独立 WS2812 控制包。程序通过 PWM6_M1 控制
-18 颗串联灯珠，不依赖 `roboparty-base`。
+RoboPi RK3588S 平台的附加工具包，包含 WS2812 灯带控制和 SIG/按键 GPIO 辅助工具，
+不依赖 `roboparty-base`。
+
+- `robopi-ws2812`：通过 PWM6_M1 控制 18 颗串联 WS2812 灯珠
+- `robopi-sig-key`：SIG 上升沿触发 LED 输出与按键处理
 
 本软件包不会安装或修改设备树。使用前需要确保系统已经启用 PWM6_M1。
 
 ## 包含内容
 
-- `roboparty-ws2812` 命令行控制程序
+- `robopi-ws2812` 命令行控制程序
 - 常亮、闪烁、流水灯、彩虹和综合演示效果
-- 支持 ARM64 原生构建和 amd64 到 ARM64 交叉构建
+- `robopi-sig-key` SIG/按键 GPIO 辅助程序
+- 支持 ARM64 原生构建
+- 通过 DKMS 安装内核模块，内核升级时自动重新编译
 - 用于安装和卸载的 Debian 软件包配置
 
 ## 控制命令
@@ -20,33 +25,33 @@ RoboParty RK3588S 平台的独立 WS2812 控制包。程序通过 PWM6_M1 控制
 
 ```bash
 # 使用默认低亮度白色开灯（48, 48, 48）
-sudo roboparty-ws2812 on
+sudo robopi-ws2812 on
 
 # 使用自定义 RGB 颜色开灯
-sudo roboparty-ws2812 on 255 80 0
+sudo robopi-ws2812 on 255 80 0
 
 # 关灯
-sudo roboparty-ws2812 off
+sudo robopi-ws2812 off
 
 # 常亮：R G B
-sudo roboparty-ws2812 solid 255 0 0
+sudo robopi-ws2812 solid 255 0 0
 
 # 闪烁：R G B [间隔毫秒] [次数]
 # 次数省略或设为0：持续运行，直到按 Ctrl+C
-sudo roboparty-ws2812 flash 0 255 0 500 10
-sudo roboparty-ws2812 flash 0 0 255 200
+sudo robopi-ws2812 flash 0 255 0 500 10
+sudo robopi-ws2812 flash 0 0 255 200
 
 # 流水灯：R G B [步进毫秒] [亮灯宽度]
-sudo roboparty-ws2812 chase 0 0 255 80 3
+sudo robopi-ws2812 chase 0 0 255 80 3
 
 # 彩虹灯：[步进毫秒]
-sudo roboparty-ws2812 rainbow 40
+sudo robopi-ws2812 rainbow 40
 
 # 短时间综合演示，结束后自动熄灯
-sudo roboparty-ws2812 demo
+sudo robopi-ws2812 demo
 
 # 查看帮助
-roboparty-ws2812 --help
+robopi-ws2812 --help
 ```
 
 持续运行的效果可以按 `Ctrl+C` 停止，程序退出前会自动熄灭灯带。
@@ -68,32 +73,31 @@ roboparty-ws2812 --help
 
 ```bash
 sudo apt install build-essential debhelper
-chmod +x build-deb.sh
-./build-deb.sh
-```
-
-在 amd64 Ubuntu 电脑上交叉构建：
-
-```bash
-sudo apt install build-essential debhelper crossbuild-essential-arm64
-chmod +x build-deb.sh
-./build-deb.sh
+dpkg-buildpackage -us -uc -b
 ```
 
 `.deb` 安装包会生成在项目的上一级目录中。
 
 ## 安装
 
+内核模块在安装时由 DKMS 针对当前运行内核编译，因此目标机器上需要安装对应的内核头文件：
+
 ```bash
-sudo apt install ../roboparty-ws2812_*_arm64.deb
+sudo apt install dkms linux-headers-$(uname -r)
+sudo apt install ../robopi-addon_*_arm64.deb
 ```
+
+内核升级时 DKMS 会自动重新编译 `robopi-ws2812`。模块通过
+`/etc/modules-load.d/robopi-ws2812.conf` 在开机时加载。
 
 ## 卸载
 
 ```bash
-sudo apt remove roboparty-ws2812
-sudo apt purge roboparty-ws2812
+sudo apt remove robopi-addon
+sudo apt purge robopi-addon
 ```
+
+卸载脚本会移除 DKMS 模块，从而一并删除所有内核上已编译安装的驱动。
 
 ## 编译时自定义配置
 

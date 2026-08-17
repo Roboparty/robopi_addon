@@ -18,7 +18,7 @@ override_dh_auto_clean:
 	$(MAKE) clean
 
 override_dh_auto_install:
-	$(MAKE) DESTDIR=$(CURDIR)/debian/roboparty-ws2812 install
+	$(MAKE) DESTDIR=$(CURDIR)/debian/robopi-addon install
 
 override_dh_installsystemd:
 	dh_installsystemd --no-enable --no-start

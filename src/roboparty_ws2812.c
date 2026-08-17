@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: GPL-2.0
+// SPDX-License-Identifier: GPL-3.0
+// Copyright (C) 2025-2026 fanxiaobinggit
 /* RoboPi2 RK3588S PWM6_M1 WS2812 frame transmitter. */
 
 #include <linux/clk.h>

@@ -14,7 +14,8 @@ be enabled by the system.
 - `roboparty-ws2812` command-line controller
 - `roboparty_ws2812` kernel transmitter and `/dev/roboparty-ws2812`
 - Solid color, flash, chase, rainbow, and demo effects
-- Native ARM64 and amd64-to-ARM64 cross-build support
+- Native ARM64 build support
+- DKMS-based kernel module installation with automatic rebuild on kernel updates
 - Debian packaging for installation and removal
 
 ## Commands
@@ -71,33 +72,34 @@ Start with low RGB values such as `16-64` to avoid excessive power draw.
 Build natively on the ARM64 board:
 
 ```bash
-sudo apt install build-essential debhelper linux-headers-$(uname -r)
-chmod +x build-deb.sh
-./build-deb.sh
-```
-
-Cross-build on an amd64 Ubuntu computer:
-
-```bash
-sudo apt install build-essential debhelper crossbuild-essential-arm64
-chmod +x build-deb.sh
-./build-deb.sh
+sudo apt install build-essential debhelper
+dpkg-buildpackage -us -uc -b
 ```
 
 The `.deb` file will be generated in the parent directory.
 
 ## Install
 
+The kernel module is built at install time by DKMS against the running kernel,
+so the matching headers must be available on the target:
+
 ```bash
-sudo apt install ../roboparty-ws2812_*_arm64.deb
+sudo apt install dkms linux-headers-$(uname -r)
+sudo apt install ../robopi-addon_*_arm64.deb
 ```
+
+DKMS rebuilds `roboparty_ws2812` automatically whenever the kernel is updated.
+The module is loaded at boot via `/etc/modules-load.d/roboparty-ws2812.conf`.
 
 ## Uninstall
 
 ```bash
-sudo apt remove roboparty-ws2812
-sudo apt purge roboparty-ws2812
+sudo apt remove robopi-addon
+sudo apt purge robopi-addon
 ```
+
+The `prerm` script removes the DKMS module so the driver is also uninstalled
+from every kernel it was built for.
 
 ## Compile-time configuration
 
