@@ -21,7 +21,7 @@ RoboPi RK3588S 平台的附加工具包，包含 WS2812 灯带控制和 SIG/按�
 
 ## 控制命令
 
-程序需要访问 `/dev/mem` 和 PWM sysfs 接口，因此必须使用 root 权限运行。
+程序通过内核模块设备节点 `/dev/robopi-ws2812` 发送 GRB 帧，必须使用 root 权限运行。
 
 ```bash
 # 使用默认低亮度白色开灯（48, 48, 48）
@@ -101,16 +101,14 @@ sudo apt purge robopi-addon
 
 ## 编译时自定义配置
 
-以下设置位于 `src/ws2812_pwm6.c` 文件开头，修改后需要重新构建：
+以下设置位于内核模块 `src/robopi-ws2812.c` 文件开头，修改后需要重新构建：
 
 ```c
 #define LED_COUNT       18
-#define PWM6_ADDR       0xfebd0020u
-#define PWMCHIP_DIR     "/sys/class/pwm/pwmchip2"
-
-static uint32_t period_ticks = 30;
-static uint32_t zero_ticks = 8;
-static uint32_t one_ticks = 19;
+#define PWM6_PHYS       0xfebd0020
+#define PERIOD_TICKS    18
+#define ZERO_TICKS      6
+#define ONE_TICKS       12
 ```
 
 修改 WS2812 时序参数后，必须使用示波器验证实际输出波形。

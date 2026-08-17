@@ -1,57 +1,60 @@
-# roboparty-ws2812
+# robopi-addon
 
 [中文说明](README_CN.md)
 
-Standalone WS2812 controller package for the RoboParty RK3588S platform. It
-controls 18 daisy-chained LEDs through PWM6_M1 and does not depend on
-`roboparty-base`.
+Add-on toolkit for the RoboPi RK3588S platform: WS2812 strip control and
+SIG/key GPIO helpers. It does not depend on `roboparty-base`.
+
+- `robopi-ws2812`: controls 18 daisy-chained WS2812 LEDs through PWM6_M1
+- `robopi-sig-key`: SIG rising-edge LED output and key handling
 
 This package does not install or modify the device tree. PWM6_M1 must already
 be enabled by the system.
 
 ## What's included
 
-- `roboparty-ws2812` command-line controller
-- `roboparty_ws2812` kernel transmitter and `/dev/roboparty-ws2812`
+- `robopi-ws2812` command-line controller
+- `robopi-ws2812` kernel transmitter and `/dev/robopi-ws2812`
 - Solid color, flash, chase, rainbow, and demo effects
+- `robopi-sig-key` SIG/key GPIO helper
 - Native ARM64 build support
 - DKMS-based kernel module installation with automatic rebuild on kernel updates
 - Debian packaging for installation and removal
 
 ## Commands
 
-The program sends GRB frames through `/dev/roboparty-ws2812`; the kernel
+The program sends GRB frames through `/dev/robopi-ws2812`; the kernel
 module generates the validated 800 kHz PWM6_M1 waveform.
 
 ```bash
 # Turn on with the default dim white color (48, 48, 48)
-sudo roboparty-ws2812 on
+sudo robopi-ws2812 on
 
 # Turn on with a custom RGB color
-sudo roboparty-ws2812 on 255 80 0
+sudo robopi-ws2812 on 255 80 0
 
 # Turn off
-sudo roboparty-ws2812 off
+sudo robopi-ws2812 off
 
 # Solid color: R G B
-sudo roboparty-ws2812 solid 255 0 0
+sudo robopi-ws2812 solid 255 0 0
 
 # Flash: R G B [interval_ms] [count]
 # count=0 or omitted: run until Ctrl+C
-sudo roboparty-ws2812 flash 0 255 0 500 10
-sudo roboparty-ws2812 flash 0 0 255 200
+sudo robopi-ws2812 flash 0 255 0 500 10
+sudo robopi-ws2812 flash 0 0 255 200
 
 # Chase: R G B [step_ms] [width]
-sudo roboparty-ws2812 chase 0 0 255 80 3
+sudo robopi-ws2812 chase 0 0 255 80 3
 
 # Rainbow: [step_ms]
-sudo roboparty-ws2812 rainbow 40
+sudo robopi-ws2812 rainbow 40
 
 # Short demonstration, then turn off
-sudo roboparty-ws2812 demo
+sudo robopi-ws2812 demo
 
 # Show help
-roboparty-ws2812 --help
+robopi-ws2812 --help
 ```
 
 Continuous effects stop with `Ctrl+C` and turn the strip off before exiting.
@@ -88,8 +91,8 @@ sudo apt install dkms linux-headers-$(uname -r)
 sudo apt install ../robopi-addon_*_arm64.deb
 ```
 
-DKMS rebuilds `roboparty_ws2812` automatically whenever the kernel is updated.
-The module is loaded at boot via `/etc/modules-load.d/roboparty-ws2812.conf`.
+DKMS rebuilds `robopi-ws2812` automatically whenever the kernel is updated.
+The module is loaded at boot via `/etc/modules-load.d/robopi-ws2812.conf`.
 
 ## Uninstall
 
@@ -103,17 +106,15 @@ from every kernel it was built for.
 
 ## Compile-time configuration
 
-The following settings are defined near the top of `src/ws2812_pwm6.c` and
-require a rebuild after modification:
+The following settings are defined near the top of the kernel module
+`src/robopi-ws2812.c` and require a rebuild after modification:
 
 ```c
 #define LED_COUNT       18
-#define PWM6_ADDR       0xfebd0020u
-#define PWMCHIP_DIR     "/sys/class/pwm/pwmchip2"
-
-static uint32_t period_ticks = 30;
-static uint32_t zero_ticks = 8;
-static uint32_t one_ticks = 19;
+#define PWM6_PHYS       0xfebd0020
+#define PERIOD_TICKS    18
+#define ZERO_TICKS      6
+#define ONE_TICKS       12
 ```
 
 Validate all timing changes with an oscilloscope.

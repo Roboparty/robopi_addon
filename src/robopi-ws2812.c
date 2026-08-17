@@ -102,12 +102,12 @@ static const struct file_operations ws2812_fops = {
 
 static struct miscdevice ws2812_misc = {
 	.minor = MISC_DYNAMIC_MINOR,
-	.name = "roboparty-ws2812",
+	.name = "robopi-ws2812",
 	.fops = &ws2812_fops,
 	.mode = 0660,
 };
 
-static int __init roboparty_ws2812_init(void)
+static int __init robopi_ws2812_init(void)
 {
 	int ret;
 
@@ -166,7 +166,7 @@ static int __init roboparty_ws2812_init(void)
 	ret = misc_register(&ws2812_misc);
 	if (ret)
 		goto err_unmap;
-	pr_info("roboparty_ws2812: PWM6_M1 ready, %d LEDs\n", LED_COUNT);
+	pr_info("robopi_ws2812: PWM6_M1 ready, %d LEDs\n", LED_COUNT);
 	return 0;
 
 err_unmap:
@@ -186,7 +186,7 @@ err_device:
 	return ret;
 }
 
-static void __exit roboparty_ws2812_exit(void)
+static void __exit robopi_ws2812_exit(void)
 {
 	u8 off[FRAME_BYTES] = { 0 };
 
@@ -202,11 +202,11 @@ static void __exit roboparty_ws2812_exit(void)
 	clk_put(pwm_clk);
 	pinctrl_put(pwm_pinctrl);
 	put_device(pwm_dev);
-	pr_info("roboparty_ws2812: stopped\n");
+	pr_info("robopi_ws2812: stopped\n");
 }
 
-module_init(roboparty_ws2812_init);
-module_exit(roboparty_ws2812_exit);
+module_init(robopi_ws2812_init);
+module_exit(robopi_ws2812_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("RoboParty");
 MODULE_DESCRIPTION("RoboPi2 PWM6_M1 WS2812 controller");

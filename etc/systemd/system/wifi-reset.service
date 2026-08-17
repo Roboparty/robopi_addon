@@ -1,0 +1,22 @@
+[Unit]
+Description=RoboParty WiFi Reset Monitor
+Documentation=https://github.com/Roboparty/robopi_addon
+After=network.target NetworkManager.service
+Wants=NetworkManager.service
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/wifi-reset
+ExecStart=/opt/roboparty/bin/wifi-reconnect.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=wifi-reset-monitor
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

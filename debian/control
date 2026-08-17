@@ -8,7 +8,8 @@ Rules-Requires-Root: no
 
 Package: robopi-addon
 Architecture: arm64
-Depends: ${shlibs:Depends}, ${misc:Depends}, dkms, kmod
+Depends: ${shlibs:Depends}, ${misc:Depends}, dkms, kmod, roboparty-base (>= 1.0.0),
+         python3-serial, python3-usb, python3-crcmod, python3-hid
 Description: RoboPi RK3588S WS2812 and SIG/key GPIO helpers
  Controls an 18-pixel WS2812 strip from PWM6_M1 on the RoboParty RK3588S
  board through a kernel PWM transmitter. Also provides SIG-controlled LED output and gated key handling for

@@ -1,0 +1,25 @@
+[Unit]
+Description=RoboParty HPM Reset Monitor (GPIO4_B5 USB hub reset)
+Documentation=https://github.com/Roboparty/robopi_addon
+After=multi-user.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/hpm-reset
+ExecStartPre=/bin/sleep 3
+ExecStart=/opt/roboparty/bin/reset_hpm.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hpm-reset-monitor
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/sys/class/leds/usb_hub_reset
+
+[Install]
+WantedBy=multi-user.target

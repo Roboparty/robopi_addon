@@ -8,6 +8,8 @@ else
 WS2812_CC := $(DEB_HOST_GNU_TYPE)-gcc
 endif
 
+VERSION := $(shell dpkg-parsechangelog -S Version | cut -d'-' -f1)
+
 %:
 	dh $@
 
@@ -18,7 +20,7 @@ override_dh_auto_clean:
 	$(MAKE) clean
 
 override_dh_auto_install:
-	$(MAKE) DESTDIR=$(CURDIR)/debian/robopi-addon install
+	$(MAKE) DESTDIR=$(CURDIR)/debian/robopi-addon VERSION=$(VERSION) install
 
 override_dh_installsystemd:
 	dh_installsystemd --no-enable --no-start

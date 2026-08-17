@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 // Copyright (C) 2025-2026 fanxiaobinggit
 // RoboPi2 RK3588S PWM6_M1 (GPIO4_C1) WS2812 controller, 18 LEDs.
-// Frames are transmitted by the roboparty_ws2812 kernel module.
+// Frames are transmitted by the robopi-ws2812 kernel module.
 // Build: gcc -O3 -Wall -Wextra -o ws2812_pwm6 ws2812_pwm6.c -lm
-// Run:   sudo roboparty-ws2812 <off|on|solid|flash|chase|rainbow|demo> [args]
+// Run:   sudo robopi-ws2812 <off|on|solid|flash|chase|rainbow|demo> [args]
 //
 #include <errno.h>
 #include <fcntl.h>
@@ -17,7 +17,7 @@
 
 #define LED_COUNT       18
 #define FRAME_BYTES     (LED_COUNT * 3)
-#define DEVICE_PATH     "/dev/roboparty-ws2812"
+#define DEVICE_PATH     "/dev/robopi-ws2812"
 
 static volatile sig_atomic_t running = 1;
 static int device_fd = -1;
@@ -28,7 +28,7 @@ static int open_backend(void) {
     device_fd = open(DEVICE_PATH, O_WRONLY | O_CLOEXEC);
     if (device_fd < 0) {
         perror("open " DEVICE_PATH);
-        fprintf(stderr, "Kernel module is unavailable; try: sudo modprobe roboparty_ws2812\n");
+        fprintf(stderr, "Kernel module is unavailable; try: sudo modprobe robopi-ws2812\n");
         return -1;
     }
     return 0;

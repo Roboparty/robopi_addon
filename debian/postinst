@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-DKMS_NAME=roboparty-ws2812
-DKMS_VERSION=1.5.0
+DKMS_NAME=robopi-ws2812
+DKMS_VERSION=$(dpkg-query -W -f='${Version}' robopi-addon 2>/dev/null | cut -d'-' -f1)
 
 if [ "$1" = configure ]; then
     if command -v dkms >/dev/null 2>&1; then
@@ -13,6 +13,12 @@ if [ "$1" = configure ]; then
         fi
         dkms install -m "$DKMS_NAME" -v "$DKMS_VERSION" || true
     fi
+
+    systemctl daemon-reload
+    systemctl enable wifi-reset.service 2>/dev/null || true
+    systemctl start wifi-reset.service 2>/dev/null || true
+    systemctl enable hpm-reset.service 2>/dev/null || true
+    systemctl start hpm-reset.service 2>/dev/null || true
 fi
 
 #DEBHELPER#

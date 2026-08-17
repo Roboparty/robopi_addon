@@ -5,14 +5,14 @@ CFLAGS ?= -O3 -Wall -Wextra
 PREFIX ?= /usr
 KERNEL_RELEASE ?= $(shell uname -r)
 KDIR ?= /lib/modules/$(KERNEL_RELEASE)/build
-VERSION ?= 1.5.0
-DKMS_DIR ?= $(DESTDIR)/usr/src/roboparty-ws2812-$(VERSION)
+VERSION ?= $(shell dpkg-parsechangelog -S Version 2>/dev/null | cut -d'-' -f1)
+DKMS_DIR ?= $(DESTDIR)/usr/src/robopi-ws2812-$(VERSION)
 
 .PHONY: all clean install package kernel
 
-all: build/roboparty-ws2812 build/robopi-sig-key
+all: build/robopi-ws2812 build/robopi-sig-key
 
-build/roboparty-ws2812: src/ws2812_pwm6.c
+build/robopi-ws2812: src/ws2812_pwm6.c
 	mkdir -p build
 	$(CC) $(CFLAGS) -o $@ $< -lm
 
@@ -24,15 +24,33 @@ kernel:
 	$(MAKE) -C $(KDIR) M=$(CURDIR)/src modules
 
 install: all
-	install -D -m 0755 build/roboparty-ws2812 $(DESTDIR)$(PREFIX)/bin/roboparty-ws2812
+	install -D -m 0755 build/robopi-ws2812 $(DESTDIR)$(PREFIX)/bin/robopi-ws2812
 	install -D -m 0755 build/robopi-sig-key $(DESTDIR)$(PREFIX)/bin/robopi-sig-key
 	install -D -m 0644 etc/systemd/system/robopi-sig-key.service \
 		$(DESTDIR)/lib/systemd/system/robopi-sig-key.service
-	install -D -m 0644 etc/modules-load.d/roboparty-ws2812.conf \
-		$(DESTDIR)/etc/modules-load.d/roboparty-ws2812.conf
-	install -D -m 0644 dkms.conf $(DKMS_DIR)/dkms.conf
+	install -D -m 0644 etc/modules-load.d/robopi-ws2812.conf \
+		$(DESTDIR)/etc/modules-load.d/robopi-ws2812.conf
+	install -D -m 0644 etc/systemd/system/hpm-reset.service \
+		$(DESTDIR)/lib/systemd/system/hpm-reset.service
+	install -D -m 0644 etc/systemd/system/wifi-reset.service \
+		$(DESTDIR)/lib/systemd/system/wifi-reset.service
+	install -D -m 0755 scripts/reset_hpm.sh \
+		$(DESTDIR)/opt/roboparty/bin/reset_hpm.sh
+	install -D -m 0755 scripts/wifi-reconnect.sh \
+		$(DESTDIR)/opt/roboparty/bin/wifi-reconnect.sh
+	install -D -m 0755 scripts/flash_hpm.sh \
+		$(DESTDIR)/opt/roboparty/bin/flash_hpm.sh
+	install -D -m 0755 scripts/hpmtool.py \
+		$(DESTDIR)/opt/roboparty/bin/hpmtool
+	install -D -m 0644 etc/default/hpm-reset \
+		$(DESTDIR)/etc/default/hpm-reset
+	install -D -m 0644 etc/default/wifi-reset \
+		$(DESTDIR)/etc/default/wifi-reset
+	mkdir -p $(DKMS_DIR)
+	sed 's/@VERSION@/$(VERSION)/g' dkms.conf.in > $(DKMS_DIR)/dkms.conf
+	chmod 0644 $(DKMS_DIR)/dkms.conf
 	install -D -m 0644 src/Makefile $(DKMS_DIR)/Makefile
-	install -D -m 0644 src/roboparty_ws2812.c $(DKMS_DIR)/roboparty_ws2812.c
+	install -D -m 0644 src/robopi-ws2812.c $(DKMS_DIR)/robopi-ws2812.c
 
 package:
 	dpkg-buildpackage -us -uc -b

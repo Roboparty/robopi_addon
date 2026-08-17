@@ -1,0 +1,18 @@
+# HPM Reset Monitor default configuration
+# See: /etc/systemd/system/hpm-reset.service
+
+# Check interval in seconds
+CHECK_INTERVAL=2
+
+# Number of consecutive failures before triggering reset
+FAIL_THRESHOLD=10
+
+# Reset pulse duration in seconds
+RESET_HOLD_TIME=0.5
+
+# Wait time after reset in seconds
+POST_RESET_WAIT=15
+
+# USB device identification (roboto_usb4can)
+HPM_VID=1209
+HPM_PID=2323

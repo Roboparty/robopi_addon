@@ -1,0 +1,11 @@
+# WiFi Reset Monitor default configuration
+# See: /etc/systemd/system/wifi-reset.service
+
+# Check interval in seconds
+CHECK_INTERVAL=30
+
+# Number of consecutive failures before reporting error
+FAIL_THRESHOLD=3
+
+# WiFi interface name (set to empty for auto-detection)
+WIFI_INTERFACE=wlan0
