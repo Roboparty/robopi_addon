@@ -1,5 +1,5 @@
 [Unit]
-Description=RoboPi SIG LED and key gate
+Description=RoboPi SIG rising-edge LED trigger
 After=multi-user.target
 
 [Service]

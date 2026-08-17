@@ -110,3 +110,59 @@ static uint32_t one_ticks = 19;
 ```
 
 修改 WS2812 时序参数后，必须使用示波器验证实际输出波形。
+
+## SIG 上升沿触发 LED
+
+| 功能 | GPIO | GPIO字符设备 | 有效状态 |
+|---|---|---|---|
+| SIG输入 | GPIO1_D5 | `/dev/gpiochip1` offset 29 | 上升沿 |
+| LED输出 | GPIO0_C2 | `/dev/gpiochip0` offset 18 | 高电平点亮 |
+
+`robopi-sig-key`启动时保持LED熄灭。SIG从低电平变为高电平时，程序检测上升沿并点亮LED；SIG随后恢复低电平不会直接熄灭LED。程序退出时会自动熄灭LED。
+
+> SIG输入电压不得超过GPIO1_D5所在IO电源域的允许范围，禁止直接输入5V。
+
+### 前台测试
+
+默认在上升沿后锁存点亮：
+
+```bash
+sudo robopi-sig-key
+```
+
+正常启动和触发输出：
+
+```text
+Started: waiting for SIG rising edge; LED is off.
+SIG rising edge -> LED on
+KEY_PRESSED
+```
+
+按 `Ctrl+C` 退出并熄灭LED。
+
+### 定时熄灭
+
+每次上升沿触发后点亮LED 1000毫秒：
+
+```bash
+sudo robopi-sig-key --led-on-ms 1000
+```
+
+### 其他参数
+
+```bash
+robopi-sig-key --help
+sudo robopi-sig-key --debounce-ms 30
+sudo robopi-sig-key --on-press '/opt/my-app/start.sh'
+sudo robopi-sig-key --sig-active-low
+sudo robopi-sig-key --led-active-low
+```
+
+### systemd 服务
+
+确认前台测试正常后，可以启用开机自启动服务：
+
+```bash
+sudo systemctl enable --now robopi-sig-key.service
+journalctl -u robopi-sig-key.service -f
+```

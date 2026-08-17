@@ -24,6 +24,7 @@ struct options {
     bool sig_active_low;
     bool led_active_low;
     unsigned debounce_ms;
+    unsigned led_on_ms;
     const char *on_press;
 };
 
@@ -42,7 +43,8 @@ static void usage(const char *name)
            "  --led N              LED offset (default: 18 = GPIO0_C2)\n"
            "  --sig-active-low     invert SIG logical level\n"
            "  --led-active-low     invert LED electrical level\n"
-           "  --debounce-ms N      key debounce time (default: 30)\n"
+           "  --debounce-ms N      rising-edge debounce time (default: 30)\n"
+           "  --led-on-ms N        turn LED off after N ms (default: 0 = latch on)\n"
            "  --on-press COMMAND   run COMMAND for each valid key press\n"
            "  -h, --help           show this help\n", name);
 }
@@ -58,13 +60,14 @@ static unsigned parse_u32(const char *text, const char *what)
     return (unsigned)value;
 }
 
-static int request_input_events(int chip_fd, unsigned offset, bool active_low,
-                                const char *label)
+static int request_events(int chip_fd, unsigned offset, bool active_low,
+                          const char *label)
 {
     struct gpioevent_request req;
     memset(&req, 0, sizeof(req));
     req.lineoffset = offset;
     req.handleflags = GPIOHANDLE_REQUEST_INPUT |
+                      GPIOHANDLE_REQUEST_BIAS_DISABLE |
                       (active_low ? GPIOHANDLE_REQUEST_ACTIVE_LOW : 0);
     req.eventflags = GPIOEVENT_REQUEST_BOTH_EDGES;
     snprintf(req.consumer_label, sizeof(req.consumer_label), "%s", label);
@@ -93,15 +96,6 @@ static int request_output(int chip_fd, unsigned offset, bool active_low,
         return -1;
     }
     return req.fd;
-}
-
-static int get_value(int fd)
-{
-    struct gpiohandle_data data;
-    memset(&data, 0, sizeof(data));
-    if (ioctl(fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &data) < 0)
-        return -1;
-    return data.values[0] ? 1 : 0;
 }
 
 static int set_value(int fd, int value)
@@ -140,6 +134,7 @@ int main(int argc, char **argv)
         .sig_offset = 29,  /* GPIO1_D5, button SIG, high when pressed */
         .led_offset = 18,  /* GPIO0_C2, LED, high when on */
         .debounce_ms = 30,
+        .led_on_ms = 0,
     };
 
     for (int i = 1; i < argc; ++i) {
@@ -148,6 +143,7 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--sig") && i + 1 < argc) opt.sig_offset = parse_u32(argv[++i], "SIG offset");
         else if (!strcmp(argv[i], "--led") && i + 1 < argc) opt.led_offset = parse_u32(argv[++i], "LED offset");
         else if (!strcmp(argv[i], "--debounce-ms") && i + 1 < argc) opt.debounce_ms = parse_u32(argv[++i], "debounce time");
+        else if (!strcmp(argv[i], "--led-on-ms") && i + 1 < argc) opt.led_on_ms = parse_u32(argv[++i], "LED on time");
         else if (!strcmp(argv[i], "--on-press") && i + 1 < argc) opt.on_press = argv[++i];
         else if (!strcmp(argv[i], "--sig-active-low")) opt.sig_active_low = true;
         else if (!strcmp(argv[i], "--led-active-low")) opt.led_active_low = true;
@@ -171,8 +167,8 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    int sig_fd = request_input_events(sig_chip_fd, opt.sig_offset,
-                                      opt.sig_active_low, "sig-led-sig");
+    int sig_fd = request_events(sig_chip_fd, opt.sig_offset,
+                                opt.sig_active_low, "sig-led-sig");
     int led_fd = request_output(led_chip_fd, opt.led_offset,
                                 opt.led_active_low, "sig-led-led");
     if (sig_fd < 0 || led_fd < 0) {
@@ -180,43 +176,60 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    int sig_level = get_value(sig_fd);
-    if (sig_level < 0 || set_value(led_fd, sig_level) < 0) {
-        fprintf(stderr, "Initial GPIO read/write failed: %s\n", strerror(errno));
+    if (set_value(led_fd, 0) < 0) {
+        fprintf(stderr, "Initial LED write failed: %s\n", strerror(errno));
         set_value(led_fd, 0);
         return EXIT_FAILURE;
     }
-    printf("Started: SIG=%d, LED=%d. Button is active when SIG is high.\n",
-           sig_level, sig_level);
+    printf("Started: waiting for SIG rising edge; LED is off.\n");
     fflush(stdout);
 
-    struct pollfd fd = {.fd = sig_fd, .events = POLLIN};
-    uint64_t last_press_ms = 0;
+    uint64_t last_rising_ms = 0;
+    uint64_t led_off_at_ms = 0;
     while (running) {
-        int rc = poll(&fd, 1, 500);
-        if (rc < 0) {
+        int timeout = -1;
+        uint64_t now = monotonic_ms();
+        if (led_off_at_ms) {
+            timeout = now >= led_off_at_ms ? 0 : (int)(led_off_at_ms - now);
+        }
+        struct pollfd pfd = { .fd = sig_fd, .events = POLLIN };
+        int ready = poll(&pfd, 1, timeout);
+        if (ready < 0) {
             if (errno == EINTR) continue;
-            fprintf(stderr, "poll failed: %s\n", strerror(errno));
+            fprintf(stderr, "SIG poll failed: %s\n", strerror(errno));
             break;
         }
-        if (fd.revents & POLLIN) {
-            struct gpioevent_data event;
-            ssize_t count = read(sig_fd, &event, sizeof(event));
-            if (count != (ssize_t)sizeof(event)) break;
-            sig_level = get_value(sig_fd);
-            if (sig_level < 0 || set_value(led_fd, sig_level) < 0) break;
-            printf("SIG %s -> LED %s\n", sig_level ? "active" : "inactive",
-                   sig_level ? "on" : "off");
-            fflush(stdout);
-            uint64_t now = monotonic_ms();
-            if (sig_level == 1 &&
-                (last_press_ms == 0 || now - last_press_ms >= opt.debounce_ms)) {
-                last_press_ms = now;
-                puts("KEY_PRESSED");
-                fflush(stdout);
-                run_press_command(opt.on_press);
+        now = monotonic_ms();
+        if (led_off_at_ms && now >= led_off_at_ms) {
+            if (set_value(led_fd, 0) < 0) {
+                fprintf(stderr, "LED write failed: %s\n", strerror(errno));
+                break;
             }
+            led_off_at_ms = 0;
+            puts("LED off (timeout)");
+            fflush(stdout);
         }
+        if (ready == 0) continue;
+        struct gpioevent_data event;
+        if (read(sig_fd, &event, sizeof(event)) != sizeof(event)) {
+            if (errno == EINTR) continue;
+            fprintf(stderr, "SIG event read failed: %s\n", strerror(errno));
+            break;
+        }
+        if (event.id != GPIOEVENT_EVENT_RISING_EDGE) continue;
+        uint64_t event_ms = event.timestamp / 1000000u;
+        if (last_rising_ms && event_ms - last_rising_ms < opt.debounce_ms)
+            continue;
+        last_rising_ms = event_ms;
+        if (set_value(led_fd, 1) < 0) {
+            fprintf(stderr, "LED write failed: %s\n", strerror(errno));
+            break;
+        }
+        led_off_at_ms = opt.led_on_ms ? monotonic_ms() + opt.led_on_ms : 0;
+        puts("SIG rising edge -> LED on");
+        puts("KEY_PRESSED");
+        fflush(stdout);
+        run_press_command(opt.on_press);
     }
 
     set_value(led_fd, 0);

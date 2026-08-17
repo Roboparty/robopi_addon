@@ -115,3 +115,59 @@ static uint32_t one_ticks = 19;
 ```
 
 Validate all timing changes with an oscilloscope.
+
+## SIG rising-edge LED trigger
+
+| Function | GPIO | GPIO character device | Active state |
+|---|---|---|---|
+| SIG input | GPIO1_D5 | `/dev/gpiochip1`, offset 29 | Rising edge |
+| LED output | GPIO0_C2 | `/dev/gpiochip0`, offset 18 | High level |
+
+`robopi-sig-key` starts with the LED off. A low-to-high transition on SIG turns the LED on. A later falling level does not directly turn it off. Exiting the program always turns the LED off.
+
+> SIG must remain within the voltage limits of the GPIO1_D5 IO domain. Never drive SIG directly with 5 V.
+
+### Foreground test
+
+Latch the LED on after a rising edge:
+
+```bash
+sudo robopi-sig-key
+```
+
+Expected startup and trigger output:
+
+```text
+Started: waiting for SIG rising edge; LED is off.
+SIG rising edge -> LED on
+KEY_PRESSED
+```
+
+Press `Ctrl+C` to exit and turn the LED off.
+
+### Timed LED output
+
+Keep the LED on for 1000 ms after each rising edge:
+
+```bash
+sudo robopi-sig-key --led-on-ms 1000
+```
+
+### Other options
+
+```bash
+robopi-sig-key --help
+sudo robopi-sig-key --debounce-ms 30
+sudo robopi-sig-key --on-press '/opt/my-app/start.sh'
+sudo robopi-sig-key --sig-active-low
+sudo robopi-sig-key --led-active-low
+```
+
+### systemd service
+
+After validating the foreground test, enable the service at boot:
+
+```bash
+sudo systemctl enable --now robopi-sig-key.service
+journalctl -u robopi-sig-key.service -f
+```
