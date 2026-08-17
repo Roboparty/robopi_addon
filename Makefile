@@ -28,7 +28,7 @@ install: all
 	install -D -m 0755 build/robopi-sig-key $(DESTDIR)$(PREFIX)/bin/robopi-sig-key
 	install -D -m 0644 etc/systemd/system/robopi-sig-key.service \
 		$(DESTDIR)/lib/systemd/system/robopi-sig-key.service
-	install -D -m 0644 packaging/roboparty-ws2812.modules-load \
+	install -D -m 0644 etc/modules-load.d/roboparty-ws2812.conf \
 		$(DESTDIR)/etc/modules-load.d/roboparty-ws2812.conf
 	install -D -m 0644 dkms.conf $(DKMS_DIR)/dkms.conf
 	install -D -m 0644 src/Makefile $(DKMS_DIR)/Makefile
