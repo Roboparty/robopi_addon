@@ -93,6 +93,7 @@ static void usage(const char *p) {
     printf("  sudo %s flash R G B [ms] [count]   count=0: until Ctrl+C\n", p);
     printf("  sudo %s chase R G B [ms] [width]\n", p);
     printf("  sudo %s rainbow [ms]\n", p);
+    printf("  sudo %s timing                     repeat 0xAA for scope\n", p);
     printf("  sudo %s demo                       8-second test, then off\n", p);
 }
 
@@ -141,6 +142,12 @@ int main(int argc, char **argv) {
             for (int i=0;i<LED_COUNT;++i) { uint8_t r,g,b; hsv(fmodf(phase/360.0f+i/(float)LED_COUNT,1),0.25f,&r,&g,&b); f[i*3]=g; f[i*3+1]=r; f[i*3+2]=b; }
             if (send_frame(f)) { rc=1; break; } usleep(ms*1000);
         }
+    } else if (!strcmp(cmd, "timing")) {
+        memset(f, 0xaa, sizeof(f));
+        while (running) {
+            if (send_frame(f)) { rc=1; break; }
+            usleep(10000);
+        }
     } else if (!strcmp(cmd, "demo")) {
         const int colors[3][3]={{48,0,0},{0,48,0},{0,0,48}};
         for(int c=0;c<3 && running;++c){fill(f,colors[c][0],colors[c][1],colors[c][2]);send_frame(f);usleep(500000);}
@@ -153,7 +160,7 @@ int main(int argc, char **argv) {
 
 out:
     // Interrupting an animation always leaves the strip safely off.
-    if ((!strcmp(cmd,"flash") || !strcmp(cmd,"chase") || !strcmp(cmd,"rainbow")) && device_fd >= 0) {
+    if ((!strcmp(cmd,"flash") || !strcmp(cmd,"chase") || !strcmp(cmd,"rainbow") || !strcmp(cmd,"timing")) && device_fd >= 0) {
         memset(f,0,sizeof(f)); send_frame(f);
     }
     close(device_fd);

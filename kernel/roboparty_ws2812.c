@@ -10,6 +10,7 @@
 #include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
+#include <linux/pinctrl/consumer.h>
 #include <linux/preempt.h>
 #include <linux/uaccess.h>
 
@@ -22,18 +23,20 @@
 #define LED_COUNT       18
 #define FRAME_BYTES     (LED_COUNT * 3)
 
-/* 24 MHz PWM clock with the RK3588 scaled-clock (divide-by-two) mode. */
-#define PERIOD_TICKS    15 /* 1.250 us */
-#define ZERO_TICKS      5  /* 0.417 us high */
-#define ONE_TICKS       10 /* 0.833 us high */
+/* RoboPi2 PWM6 timing validated by the original direct-MMIO backend. */
+#define PERIOD_TICKS    18
+#define ZERO_TICKS      6
+#define ONE_TICKS       12
 
-/* enable, oneshot, positive duty, left aligned, LP disabled, scale=1 */
-#define ONESHOT_CTRL    (BIT(0) | BIT(3) | BIT(9) | BIT(16))
+/* Match the validated RK3588 oneshot sequence used by ws2812_pwm.c. */
+#define ONESHOT_CTRL    (BIT(0) | BIT(3) | BIT(5) | BIT(8) | BIT(9) | BIT(16))
 
 static void __iomem *pwm;
 static struct device *pwm_dev;
 static struct clk *pwm_clk;
 static struct clk *pclk;
+static struct pinctrl *pwm_pinctrl;
+static struct pinctrl_state *pwm_active_state;
 static DEFINE_MUTEX(tx_lock);
 
 static int send_frame(const u8 frame[FRAME_BYTES])
@@ -111,6 +114,30 @@ static int __init roboparty_ws2812_init(void)
 					  "febd0020.pwm");
 	if (!pwm_dev)
 		return -ENODEV;
+
+	/*
+	 * RoboPi2 DTBs name the PWM6_M1 pinctrl state "active" instead of
+	 * the conventional "default", so the PWM platform driver does not
+	 * select it automatically.  Select it here to route PWM6 to GPIO4_C1.
+	 */
+	pwm_pinctrl = pinctrl_get(pwm_dev);
+	if (IS_ERR(pwm_pinctrl)) {
+		ret = PTR_ERR(pwm_pinctrl);
+		pwm_pinctrl = NULL;
+		goto err_device;
+	}
+	pwm_active_state = pinctrl_lookup_state(pwm_pinctrl, PINCTRL_STATE_DEFAULT);
+	if (IS_ERR(pwm_active_state))
+		pwm_active_state = pinctrl_lookup_state(pwm_pinctrl, "active");
+	if (IS_ERR(pwm_active_state)) {
+		ret = PTR_ERR(pwm_active_state);
+		pwm_active_state = NULL;
+		goto err_pinctrl;
+	}
+	ret = pinctrl_select_state(pwm_pinctrl, pwm_active_state);
+	if (ret)
+		goto err_pinctrl;
+
 	pwm_clk = clk_get(pwm_dev, "pwm");
 	if (IS_ERR(pwm_clk)) {
 		ret = PTR_ERR(pwm_clk);
@@ -151,6 +178,8 @@ err_pclk:
 	clk_put(pclk);
 err_pwm_clk:
 	clk_put(pwm_clk);
+err_pinctrl:
+	pinctrl_put(pwm_pinctrl);
 err_device:
 	put_device(pwm_dev);
 	return ret;
@@ -170,6 +199,7 @@ static void __exit roboparty_ws2812_exit(void)
 	clk_disable_unprepare(pclk);
 	clk_put(pclk);
 	clk_put(pwm_clk);
+	pinctrl_put(pwm_pinctrl);
 	put_device(pwm_dev);
 	pr_info("roboparty_ws2812: stopped\n");
 }
