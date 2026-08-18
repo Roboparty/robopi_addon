@@ -1,0 +1,10 @@
+[Unit]
+Description=RoboParty HPM Bootrom Auto-Flasher
+Documentation=https://github.com/Roboparty/robopi_addon
+
+[Service]
+Type=oneshot
+ExecStart=/opt/roboparty/bin/autoflash_hpm.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hpm-autoflash

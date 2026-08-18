@@ -2,7 +2,6 @@
 # Copyright (C) 2025-2026 fanxiaobinggit
 CC ?= gcc
 CFLAGS ?= -O3 -Wall -Wextra
-PREFIX ?= /usr
 KERNEL_RELEASE ?= $(shell uname -r)
 KDIR ?= /lib/modules/$(KERNEL_RELEASE)/build
 VERSION ?= $(shell dpkg-parsechangelog -S Version 2>/dev/null | cut -d'-' -f1)
@@ -24,8 +23,8 @@ kernel:
 	$(MAKE) -C $(KDIR) M=$(CURDIR)/src modules
 
 install: all
-	install -D -m 0755 build/robopi-ws2812 $(DESTDIR)$(PREFIX)/bin/robopi-ws2812
-	install -D -m 0755 build/robopi-sig-key $(DESTDIR)$(PREFIX)/bin/robopi-sig-key
+	install -D -m 0755 build/robopi-ws2812 $(DESTDIR)/opt/roboparty/bin/robopi-ws2812
+	install -D -m 0755 build/robopi-sig-key $(DESTDIR)/opt/roboparty/bin/robopi-sig-key
 	install -D -m 0644 etc/systemd/system/robopi-sig-key.service \
 		$(DESTDIR)/lib/systemd/system/robopi-sig-key.service
 	install -D -m 0644 etc/modules-load.d/robopi-ws2812.conf \
@@ -34,14 +33,20 @@ install: all
 		$(DESTDIR)/lib/systemd/system/hpm-reset.service
 	install -D -m 0644 etc/systemd/system/wifi-reset.service \
 		$(DESTDIR)/lib/systemd/system/wifi-reset.service
+	install -D -m 0644 etc/systemd/system/hpm-autoflash.service \
+		$(DESTDIR)/lib/systemd/system/hpm-autoflash.service
 	install -D -m 0755 scripts/reset_hpm.sh \
 		$(DESTDIR)/opt/roboparty/bin/reset_hpm.sh
+	install -D -m 0755 scripts/autoflash_hpm.sh \
+		$(DESTDIR)/opt/roboparty/bin/autoflash_hpm.sh
 	install -D -m 0755 scripts/wifi-reconnect.sh \
 		$(DESTDIR)/opt/roboparty/bin/wifi-reconnect.sh
 	install -D -m 0755 scripts/flash_hpm.sh \
 		$(DESTDIR)/opt/roboparty/bin/flash_hpm.sh
 	install -D -m 0755 scripts/hpmtool.py \
 		$(DESTDIR)/opt/roboparty/bin/hpmtool
+	install -D -m 0644 firmware/ethercanfd_v1.0.3-20260818.bin \
+		$(DESTDIR)/opt/roboparty/lib/firmware/ethercanfd_v1.0.3-20260818.bin
 	install -D -m 0644 etc/default/hpm-reset \
 		$(DESTDIR)/etc/default/hpm-reset
 	install -D -m 0644 etc/default/wifi-reset \

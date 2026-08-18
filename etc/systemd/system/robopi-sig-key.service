@@ -4,7 +4,7 @@ After=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/robopi-sig-key --sig-chip /dev/gpiochip1 --sig 29 --led-chip /dev/gpiochip0 --led 18
+ExecStart=/opt/roboparty/bin/robopi-sig-key --sig-chip /dev/gpiochip1 --sig 29 --led-chip /dev/gpiochip0 --led 18
 Restart=on-failure
 RestartSec=1
 
