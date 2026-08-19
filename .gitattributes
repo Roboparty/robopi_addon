@@ -1,0 +1,6 @@
+# Force LF line endings for text files so shell scripts and Makefiles do not
+# get CRLF when checked out on Windows with core.autocrlf=true.
+* text eol=lf
+
+# Keep binary firmware as-is (no line-ending conversion).
+*.bin -text

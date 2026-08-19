@@ -25,6 +25,9 @@ kernel:
 install: all
 	install -D -m 0755 build/robopi-ws2812 $(DESTDIR)/opt/roboparty/bin/robopi-ws2812
 	install -D -m 0755 build/robopi-sig-key $(DESTDIR)/opt/roboparty/bin/robopi-sig-key
+	install -d $(DESTDIR)/usr/bin
+	ln -sf /opt/roboparty/bin/robopi-ws2812 $(DESTDIR)/usr/bin/robopi-ws2812
+	ln -sf /opt/roboparty/bin/robopi-sig-key $(DESTDIR)/usr/bin/robopi-sig-key
 	install -D -m 0644 etc/systemd/system/robopi-sig-key.service \
 		$(DESTDIR)/lib/systemd/system/robopi-sig-key.service
 	install -D -m 0644 etc/modules-load.d/robopi-ws2812.conf \
