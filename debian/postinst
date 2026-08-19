@@ -5,14 +5,23 @@ DKMS_NAME=robopi-ws2812
 DKMS_VERSION=$(dpkg-query -W -f='${Version}' robopi-addon 2>/dev/null | cut -d'-' -f1)
 
 if [ "$1" = configure ]; then
-    if command -v dkms >/dev/null 2>&1; then
-        dkms add -m "$DKMS_NAME" -v "$DKMS_VERSION" || true
-        if ! dkms build -m "$DKMS_NAME" -v "$DKMS_VERSION"; then
-            echo "robopi-addon: kernel module build failed (missing linux-headers?)" >&2
-            echo "robopi-addon: install linux-headers and run 'dkms autoinstall'." >&2
-        fi
-        dkms install -m "$DKMS_NAME" -v "$DKMS_VERSION" || true
+    if ! command -v dkms >/dev/null 2>&1; then
+        echo "robopi-addon: 'dkms' is required but not installed; aborting." >&2
+        exit 1
     fi
+
+    dkms add -m "$DKMS_NAME" -v "$DKMS_VERSION" || true
+    if ! dkms build -m "$DKMS_NAME" -v "$DKMS_VERSION"; then
+        echo "============================================================" >&2
+        echo "robopi-addon: FAILED to build the robopi-ws2812 kernel module." >&2
+        echo "Install matching kernel headers, then retry:" >&2
+        echo "    sudo apt install linux-headers-\$(uname -r)" >&2
+        echo "    sudo dpkg --configure -a" >&2
+        echo "============================================================" >&2
+        exit 1
+    fi
+    dkms install -m "$DKMS_NAME" -v "$DKMS_VERSION"
+    modprobe "$DKMS_NAME" 2>/dev/null || true
 
     systemctl daemon-reload
     systemctl enable wifi-reset.service 2>/dev/null || true

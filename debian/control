@@ -1,7 +1,7 @@
 Source: robopi-addon
 Section: electronics
 Priority: optional
-Maintainer: RoboParty <2321901849@qq.com>
+Maintainer: fanxiaobinggit <16692712013@163.com>
 Build-Depends: debhelper-compat (= 12)
 Standards-Version: 4.5.1
 Rules-Requires-Root: no
@@ -10,6 +10,8 @@ Package: robopi-addon
 Architecture: arm64
 Depends: ${shlibs:Depends}, ${misc:Depends}, dkms, kmod, roboparty-base (>= 1.0.0),
          python3-serial, python3-usb, python3-crcmod, python3-hid
+Replaces: roboparty-ws2812 (<< 1.5.0)
+Breaks: roboparty-ws2812 (<< 1.5.0)
 Description: RoboPi RK3588S WS2812 and SIG/key GPIO helpers
  Controls an 18-pixel WS2812 strip from PWM6_M1 on the RoboParty RK3588S
  board through a kernel PWM transmitter. Also provides SIG-controlled LED output and gated key handling for
