@@ -1,7 +1,7 @@
 Source: robopi-addon
 Section: electronics
 Priority: optional
-Maintainer: RoboParty <2321901849@qq.com>
+Maintainer: fanxiaobinggit <16692712013@163.com>
 Build-Depends: debhelper-compat (= 12)
 Standards-Version: 4.5.1
 Rules-Requires-Root: no
