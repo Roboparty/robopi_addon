@@ -1,3 +1,12 @@
+robopi-addon (1.6.1-1) stable; urgency=medium
+
+  * Symlink robopi-ws2812 and robopi-sig-key into /usr/bin so they are on PATH.
+  * Fail the postinst if the DKMS module cannot be built or installed.
+  * Add .gitattributes to force LF line endings and keep firmware binaries binary.
+  * Declare Replaces/Breaks on roboparty-ws2812 so upgrades from the old name work.
+
+ -- fanxiaobinggit <16692712013@163.com>  Wed, 19 Aug 2026 14:30:00 +0800
+
 robopi-addon (1.6.0-1) stable; urgency=medium
 
   * Rename the WS2812 command and kernel module to robopi-ws2812.
