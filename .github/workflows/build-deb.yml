@@ -28,7 +28,8 @@ jobs:
         echo "✅ Tag matches changelog: v$TAG_VERSION"
 
     - name: Install build dependencies
-      run: sudo apt-get update && sudo apt-get install -y build-essential debhelper
+      run: sudo apt-get update
+      # && sudo apt-get install -y build-essential debhelper
 
     - name: Build Debian package
       run: |
