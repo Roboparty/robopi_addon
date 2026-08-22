@@ -30,6 +30,9 @@ if [ "$1" = configure ]; then
     systemctl start hpm-reset.service 2>/dev/null || true
     # Apply the Ethernet MAC on the next boot; do not interrupt a live install.
     systemctl enable robopi-ethernet-mac.service 2>/dev/null || true
+    # Hardware test: drive GPIO1_B0 / GPIO0_C2 high on GPIO1_D5 button press.
+    systemctl enable robopi-hw-test.service 2>/dev/null || true
+    systemctl start robopi-hw-test.service 2>/dev/null || true
 fi
 
 #DEBHELPER#
