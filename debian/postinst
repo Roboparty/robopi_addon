@@ -28,6 +28,8 @@ if [ "$1" = configure ]; then
     systemctl start wifi-reset.service 2>/dev/null || true
     systemctl enable hpm-reset.service 2>/dev/null || true
     systemctl start hpm-reset.service 2>/dev/null || true
+    # Apply the Ethernet MAC on the next boot; do not interrupt a live install.
+    systemctl enable robopi-ethernet-mac.service 2>/dev/null || true
 fi
 
 #DEBHELPER#

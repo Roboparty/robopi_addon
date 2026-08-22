@@ -7,6 +7,7 @@ SIG/key GPIO helpers. It does not depend on `roboparty-base`.
 
 - `robopi-ws2812`: controls 18 daisy-chained WS2812 LEDs through PWM6_M1
 - `robopi-sig-key`: SIG rising-edge LED output and key handling
+- `robopi-ethernet-mac`: derives and applies a stable Ethernet MAC from the RK3588 Chip ID
 
 This package does not install or modify the device tree. PWM6_M1 must already
 be enabled by the system.
@@ -93,6 +94,61 @@ sudo apt install ../robopi-addon_*_arm64.deb
 
 DKMS rebuilds `robopi-ws2812` automatically whenever the kernel is updated.
 The module is loaded at boot via `/etc/modules-load.d/robopi-ws2812.conf`.
+
+## Stable Ethernet MAC experiment
+
+`robopi-ethernet-mac` derives a stable, locally administered unicast MAC from
+the RK3588 `Serial` field in `/proc/cpuinfo`. The Chip ID is not exposed directly
+as the MAC.
+
+The package enables `robopi-ethernet-mac.service`. On the next boot it applies
+the derived MAC and requests DHCP again. The service is not started while the
+deb is being installed, so installation does not interrupt the current network.
+The default interface is configured in `/etc/default/robopi-ethernet-mac`:
+
+```bash
+ETHERNET_INTERFACE=enP4p65s0
+```
+
+Run the read-only checks from a serial console before the first reboot:
+
+```bash
+robopi-ethernet-mac check
+robopi-ethernet-mac status
+```
+
+The tool stops if the Chip ID is empty, invalid, or all zero. `Derived MAC` and
+`Check MAC` must match.
+
+Applying the MAC interrupts Ethernet and requests a new DHCP address, so run it
+from a serial console:
+
+```bash
+sudo robopi-ethernet-mac apply
+```
+
+Pass a different interface name as the second argument when needed:
+
+```bash
+sudo robopi-ethernet-mac apply enP4p65s0
+```
+
+Restore NetworkManager's permanent-MAC policy with:
+
+```bash
+sudo robopi-ethernet-mac restore
+```
+
+The tool does not remove DHCP lease files under `/var/lib/NetworkManager`.
+Record the Chip ID, derived MAC, and assigned IPv4 address on multiple boards to
+verify that each board receives a distinct identity and address.
+
+Inspect the boot service with:
+
+```bash
+systemctl status robopi-ethernet-mac.service
+journalctl -u robopi-ethernet-mac.service -b
+```
 
 ## Uninstall
 

@@ -1,3 +1,9 @@
+robopi-addon (1.6.2-1) stable; urgency=medium
+
+  * Add a stable Ethernet MAC tool and boot service based on the RK3588 Chip ID.
+
+ -- fanxiaobinggit <16692712013@163.com>  Fri, 21 Aug 2026 00:00:00 +0800
+
 robopi-addon (1.6.1-1) stable; urgency=medium
 
   * Symlink robopi-ws2812 and robopi-sig-key into /usr/bin so they are on PATH.

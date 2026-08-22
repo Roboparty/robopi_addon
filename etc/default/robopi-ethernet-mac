@@ -1,0 +1,2 @@
+# Ethernet interface whose NetworkManager connection receives the stable MAC
+ETHERNET_INTERFACE=enP4p65s0

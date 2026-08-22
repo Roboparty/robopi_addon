@@ -1,0 +1,14 @@
+[Unit]
+Description=Apply RoboPi stable Ethernet MAC
+Documentation=https://github.com/Roboparty/robopi_addon
+Wants=NetworkManager.service network-online.target
+After=NetworkManager.service network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/default/robopi-ethernet-mac
+ExecStart=/opt/roboparty/bin/robopi-ethernet-mac apply ${ETHERNET_INTERFACE}
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
