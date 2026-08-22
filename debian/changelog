@@ -1,8 +1,19 @@
+robopi-addon (1.6.3-1) stable; urgency=medium
+
+  * Fix DKMS builds on the RoboPi2 Rockchip kernel headers by invoking the
+    module Makefile with a single external-module directory.
+
+ -- fanxiaobinggit <16692712013@163.com>  Sat, 22 Aug 2026 15:00:00 +0800
+
 robopi-addon (1.6.2-1) stable; urgency=medium
 
   * Add a stable Ethernet MAC tool and boot service based on the RK3588 Chip ID.
+  * Allow the addon package to take ownership of the HPM and WiFi reset
+    configuration files shipped by roboparty-base 1.1.2-1 and earlier.
+  * Remove duplicate explicit conffile declarations; debhelper registers files
+    installed under /etc automatically.
 
- -- fanxiaobinggit <16692712013@163.com>  Fri, 21 Aug 2026 00:00:00 +0800
+ -- fanxiaobinggit <16692712013@163.com>  Sat, 22 Aug 2026 00:00:00 +0800
 
 robopi-addon (1.6.1-1) stable; urgency=medium
 
