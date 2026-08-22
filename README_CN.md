@@ -7,6 +7,7 @@ RoboPi RK3588S 平台的附加工具包，包含 WS2812 灯带控制和 SIG/按�
 
 - `robopi-ws2812`：通过 PWM6_M1 控制 18 颗串联 WS2812 灯珠
 - `robopi-sig-key`：SIG 上升沿触发 LED 输出与按键处理
+- `robopi-ethernet-mac`：从 RK3588 Chip ID 派生并应用稳定的以太网 MAC
 
 本软件包不会安装或修改设备树。使用前需要确保系统已经启用 PWM6_M1。
 
@@ -89,6 +90,57 @@ sudo apt install ../robopi-addon_*_arm64.deb
 
 内核升级时 DKMS 会自动重新编译 `robopi-ws2812`。模块通过
 `/etc/modules-load.d/robopi-ws2812.conf` 在开机时加载。
+
+## 稳定以太网 MAC 实验
+
+`robopi-ethernet-mac` 从 `/proc/cpuinfo` 的 RK3588 `Serial` 派生一个稳定的
+locally administered 单播 MAC。Chip ID 不会直接作为 MAC 暴露。
+
+软件包会启用 `robopi-ethernet-mac.service`，下次开机时自动应用派生 MAC 并重新
+请求 DHCP。安装过程中不会立即启动该服务，因此不会在安装 deb 时中断当前网络。
+默认网卡在 `/etc/default/robopi-ethernet-mac` 中配置：
+
+```bash
+ETHERNET_INTERFACE=enP4p65s0
+```
+
+首次重启前建议通过串口执行只读检查：
+
+```bash
+robopi-ethernet-mac check
+robopi-ethernet-mac status
+```
+
+如果 Chip ID 为空、格式无效或全零，工具会拒绝继续。`Derived MAC` 和
+`Check MAC` 应完全相同。
+
+应用派生 MAC 会中断有线网络并重新请求 DHCP 地址，建议通过串口执行：
+
+```bash
+sudo robopi-ethernet-mac apply
+```
+
+如网卡名称不同，可将其作为第二个参数：
+
+```bash
+sudo robopi-ethernet-mac apply enP4p65s0
+```
+
+恢复 NetworkManager 的默认永久 MAC 策略：
+
+```bash
+sudo robopi-ethernet-mac restore
+```
+
+工具不会删除 `/var/lib/NetworkManager` 中的 DHCP lease。请分别在不同板卡上
+记录 `Chip ID`、`Derived MAC` 和获得的 IPv4 地址，以验证板卡身份和地址均不同。
+
+查看开机服务结果：
+
+```bash
+systemctl status robopi-ethernet-mac.service
+journalctl -u robopi-ethernet-mac.service -b
+```
 
 ## 卸载
 

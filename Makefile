@@ -28,6 +28,9 @@ install: all
 	install -d $(DESTDIR)/usr/bin
 	ln -sf /opt/roboparty/bin/robopi-ws2812 $(DESTDIR)/usr/bin/robopi-ws2812
 	ln -sf /opt/roboparty/bin/robopi-sig-key $(DESTDIR)/usr/bin/robopi-sig-key
+	install -D -m 0755 scripts/robopi-ethernet-mac.sh \
+		$(DESTDIR)/opt/roboparty/bin/robopi-ethernet-mac
+	ln -sf /opt/roboparty/bin/robopi-ethernet-mac $(DESTDIR)/usr/bin/robopi-ethernet-mac
 	install -D -m 0644 etc/systemd/system/robopi-sig-key.service \
 		$(DESTDIR)/lib/systemd/system/robopi-sig-key.service
 	install -D -m 0644 etc/modules-load.d/robopi-ws2812.conf \
@@ -36,6 +39,8 @@ install: all
 		$(DESTDIR)/lib/systemd/system/hpm-reset.service
 	install -D -m 0644 etc/systemd/system/wifi-reset.service \
 		$(DESTDIR)/lib/systemd/system/wifi-reset.service
+	install -D -m 0644 etc/systemd/system/robopi-ethernet-mac.service \
+		$(DESTDIR)/lib/systemd/system/robopi-ethernet-mac.service
 	install -D -m 0644 etc/systemd/system/hpm-autoflash.service \
 		$(DESTDIR)/lib/systemd/system/hpm-autoflash.service
 	install -D -m 0755 scripts/reset_hpm.sh \
@@ -54,6 +59,8 @@ install: all
 		$(DESTDIR)/etc/default/hpm-reset
 	install -D -m 0644 etc/default/wifi-reset \
 		$(DESTDIR)/etc/default/wifi-reset
+	install -D -m 0644 etc/default/robopi-ethernet-mac \
+		$(DESTDIR)/etc/default/robopi-ethernet-mac
 	mkdir -p $(DKMS_DIR)
 	sed 's/@VERSION@/$(VERSION)/g' dkms.conf.in > $(DKMS_DIR)/dkms.conf
 	chmod 0644 $(DKMS_DIR)/dkms.conf
