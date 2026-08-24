@@ -17,7 +17,7 @@ RoboPi RK3588S 平台的附加工具包，包含 WS2812 灯带控制和 SIG/按�
 - 常亮、闪烁、流水灯、彩虹和综合演示效果
 - `robopi-sig-key` SIG/按键 GPIO 辅助程序
 - 支持 ARM64 原生构建
-- 通过 DKMS 安装内核模块，内核升级时自动重新编译
+- 随软件包安装适配 Linux 6.1.99-rt36-rockchip-rk3588 的预编译内核模块
 - 用于安装和卸载的 Debian 软件包配置
 
 ## 控制命令
@@ -70,7 +70,13 @@ robopi-ws2812 --help
 
 ## 构建 deb 包
 
-在 ARM64 板子上原生构建：
+软件包包含固定目标内核的预编译模块：
+
+```text
+prebuilt/6.1.99-rt36-rockchip-rk3588/robopi-ws2812.ko
+```
+
+在 ARM64 板子上构建软件包：
 
 ```bash
 sudo apt install build-essential debhelper
@@ -81,15 +87,15 @@ dpkg-buildpackage -us -uc -b
 
 ## 安装
 
-内核模块在安装时由 DKMS 针对当前运行内核编译，因此目标机器上需要安装对应的内核头文件：
+软件包直接安装预编译模块，不需要 DKMS 或目标机器上的内核头文件：
 
 ```bash
-sudo apt install dkms linux-headers-$(uname -r)
 sudo apt install ../robopi-addon_*_arm64.deb
 ```
 
-内核升级时 DKMS 会自动重新编译 `robopi-ws2812`。模块通过
-`/etc/modules-load.d/robopi-ws2812.conf` 在开机时加载。
+模块安装到 `/lib/modules/6.1.99-rt36-rockchip-rk3588/extra/`，并通过
+`/etc/modules-load.d/robopi-ws2812.conf` 在开机时加载。升级内核后必须针对新内核
+重新编译 `.ko` 并发布新版软件包。
 
 ## 稳定以太网 MAC 实验
 
@@ -149,7 +155,7 @@ sudo apt remove robopi-addon
 sudo apt purge robopi-addon
 ```
 
-卸载脚本会移除 DKMS 模块，从而一并删除所有内核上已编译安装的驱动。
+卸载时会卸载正在运行的模块并刷新目标内核的模块依赖索引。
 
 ## 编译时自定义配置
 
@@ -236,4 +242,10 @@ sudo robopi-fan off
 robopi-fan status
 ```
 
-程序使用 GPIO sysfs 接口保持输出状态，不提供开机自启动服务。重新启动系统后，应由需要使用风扇的程序再次明确执行 `robopi-fan on` 或 `robopi-fan off`。
+程序使用 GPIO sysfs 接口保持输出状态。软件包会启用 `robopi-fan.service`，开机时自动将 FAN_SW 设置为高电平并启动风扇。停止该服务会关闭风扇：
+
+```bash
+systemctl status robopi-fan.service
+sudo systemctl stop robopi-fan.service
+sudo systemctl start robopi-fan.service
+```

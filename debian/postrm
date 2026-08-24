@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+TARGET_KERNEL_RELEASE=6.1.99-rt36-rockchip-rk3588
+
+if [ "$1" = remove ] || [ "$1" = purge ]; then
+    if [ -d "/lib/modules/$TARGET_KERNEL_RELEASE" ]; then
+        depmod -a "$TARGET_KERNEL_RELEASE" 2>/dev/null || true
+    fi
+fi
+
+#DEBHELPER#
+exit 0

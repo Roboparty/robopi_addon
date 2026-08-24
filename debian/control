@@ -8,7 +8,7 @@ Rules-Requires-Root: no
 
 Package: robopi-addon
 Architecture: arm64
-Depends: ${shlibs:Depends}, ${misc:Depends}, dkms, kmod, roboparty-base (>= 1.0.0),
+Depends: ${shlibs:Depends}, ${misc:Depends}, kmod, roboparty-base (>= 1.0.0),
          network-manager, python3-serial, python3-usb, python3-crcmod, python3-hid
 Replaces: roboparty-ws2812 (<< 1.5.0), roboparty-base (<= 1.1.2-1)
 Breaks: roboparty-ws2812 (<< 1.5.0)

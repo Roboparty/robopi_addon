@@ -1,0 +1,12 @@
+[Unit]
+Description=RoboPi FAN_SW boot fan control
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/roboparty/bin/robopi-fan on
+ExecStop=/opt/roboparty/bin/robopi-fan off
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

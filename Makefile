@@ -2,12 +2,11 @@
 # Copyright (C) 2025-2026 fanxiaobinggit
 CC ?= gcc
 CFLAGS ?= -O3 -Wall -Wextra
-KERNEL_RELEASE ?= $(shell uname -r)
-KDIR ?= /lib/modules/$(KERNEL_RELEASE)/build
-VERSION ?= $(shell dpkg-parsechangelog -S Version 2>/dev/null | cut -d'-' -f1)
-DKMS_DIR ?= $(DESTDIR)/usr/src/robopi-ws2812-$(VERSION)
+TARGET_KERNEL_RELEASE ?= 6.1.99-rt36-rockchip-rk3588
+KDIR ?= /lib/modules/$(TARGET_KERNEL_RELEASE)/build
+PREBUILT_MODULE ?= prebuilt/$(TARGET_KERNEL_RELEASE)/robopi-ws2812.ko
 
-.PHONY: all clean install package kernel
+.PHONY: all clean install package kernel check-prebuilt-module
 
 all: build/robopi-ws2812 build/robopi-sig-key build/robopi-hw-test
 
@@ -26,7 +25,14 @@ build/robopi-hw-test: src/hw_test.c
 kernel:
 	$(MAKE) -C $(KDIR) M=$(CURDIR)/src modules
 
-install: all
+check-prebuilt-module:
+	@test -f $(PREBUILT_MODULE) || { \
+		echo "Missing prebuilt module: $(PREBUILT_MODULE)" >&2; \
+		echo "Build it against the exact $(TARGET_KERNEL_RELEASE) kernel headers first." >&2; \
+		exit 1; \
+	}
+
+install: all check-prebuilt-module
 	install -D -m 0755 build/robopi-ws2812 $(DESTDIR)/opt/roboparty/bin/robopi-ws2812
 	install -D -m 0755 build/robopi-sig-key $(DESTDIR)/opt/roboparty/bin/robopi-sig-key
 	install -D -m 0755 build/robopi-hw-test $(DESTDIR)/opt/roboparty/bin/robopi-hw-test
@@ -44,6 +50,8 @@ install: all
 		$(DESTDIR)/lib/systemd/system/robopi-sig-key.service
 	install -D -m 0644 etc/modules-load.d/robopi-ws2812.conf \
 		$(DESTDIR)/etc/modules-load.d/robopi-ws2812.conf
+	install -D -m 0644 $(PREBUILT_MODULE) \
+		$(DESTDIR)/lib/modules/$(TARGET_KERNEL_RELEASE)/extra/robopi-ws2812.ko
 	install -D -m 0644 etc/systemd/system/hpm-reset.service \
 		$(DESTDIR)/lib/systemd/system/hpm-reset.service
 	install -D -m 0644 etc/systemd/system/wifi-reset.service \
@@ -54,6 +62,8 @@ install: all
 		$(DESTDIR)/lib/systemd/system/hpm-autoflash.service
 	install -D -m 0644 etc/systemd/system/robopi-hw-test.service \
 		$(DESTDIR)/lib/systemd/system/robopi-hw-test.service
+	install -D -m 0644 etc/systemd/system/robopi-fan.service \
+		$(DESTDIR)/lib/systemd/system/robopi-fan.service
 	install -D -m 0755 scripts/reset_hpm.sh \
 		$(DESTDIR)/opt/roboparty/bin/reset_hpm.sh
 	install -D -m 0755 scripts/autoflash_hpm.sh \
@@ -72,12 +82,6 @@ install: all
 		$(DESTDIR)/etc/default/wifi-reset
 	install -D -m 0644 etc/default/robopi-ethernet-mac \
 		$(DESTDIR)/etc/default/robopi-ethernet-mac
-	mkdir -p $(DKMS_DIR)
-	sed 's/@VERSION@/$(VERSION)/g' dkms.conf.in > $(DKMS_DIR)/dkms.conf
-	chmod 0644 $(DKMS_DIR)/dkms.conf
-	install -D -m 0644 src/Makefile $(DKMS_DIR)/Makefile
-	install -D -m 0644 src/robopi-ws2812.c $(DKMS_DIR)/robopi-ws2812.c
-
 package:
 	dpkg-buildpackage -us -uc -b
 

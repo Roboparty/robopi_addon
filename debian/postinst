@@ -1,38 +1,60 @@
 #!/bin/sh
 set -e
 
-DKMS_NAME=robopi-ws2812
-DKMS_VERSION=$(dpkg-query -W -f='${Version}' robopi-addon 2>/dev/null | cut -d'-' -f1)
+MODULE_NAME=robopi-ws2812
+TARGET_KERNEL_RELEASE=6.1.99-rt36-rockchip-rk3588
+MODULE_PATH="/lib/modules/$TARGET_KERNEL_RELEASE/extra/$MODULE_NAME.ko"
+
+is_chroot()
+{
+    if command -v systemd-detect-virt >/dev/null 2>&1; then
+        systemd-detect-virt --quiet --chroot
+        return $?
+    fi
+
+    [ "$(stat -c %d:%i / 2>/dev/null)" != "$(stat -c %d:%i /proc/1/root/. 2>/dev/null)" ]
+}
 
 if [ "$1" = configure ]; then
-    if ! command -v dkms >/dev/null 2>&1; then
-        echo "robopi-addon: 'dkms' is required but not installed; aborting." >&2
+    if [ ! -f "$MODULE_PATH" ]; then
+        echo "robopi-addon: prebuilt kernel module is missing: $MODULE_PATH" >&2
         exit 1
     fi
 
-    dkms add -m "$DKMS_NAME" -v "$DKMS_VERSION" || true
-    if ! dkms build -m "$DKMS_NAME" -v "$DKMS_VERSION"; then
-        echo "============================================================" >&2
-        echo "robopi-addon: FAILED to build the robopi-ws2812 kernel module." >&2
-        echo "Install matching kernel headers, then retry:" >&2
-        echo "    sudo apt install linux-headers-\$(uname -r)" >&2
-        echo "    sudo dpkg --configure -a" >&2
-        echo "============================================================" >&2
-        exit 1
+    # Remove registrations left by releases that installed this module using
+    # DKMS. The new package owns a prebuilt module and does not require DKMS.
+    if command -v dkms >/dev/null 2>&1; then
+        dkms status -m "$MODULE_NAME" 2>/dev/null |
+            sed -n "s#^$MODULE_NAME/\([^,:]*\)[,:].*#\1#p" |
+            while IFS= read -r old_version; do
+                [ -n "$old_version" ] || continue
+                dkms remove -m "$MODULE_NAME" -v "$old_version" --all >/dev/null 2>&1 || true
+            done
     fi
-    dkms install -m "$DKMS_NAME" -v "$DKMS_VERSION"
-    modprobe "$DKMS_NAME" 2>/dev/null || true
 
-    systemctl daemon-reload
+    depmod -a "$TARGET_KERNEL_RELEASE"
+
+    systemctl daemon-reload 2>/dev/null || true
     systemctl enable wifi-reset.service 2>/dev/null || true
-    systemctl start wifi-reset.service 2>/dev/null || true
     systemctl enable hpm-reset.service 2>/dev/null || true
-    systemctl start hpm-reset.service 2>/dev/null || true
-    # Apply the Ethernet MAC on the next boot; do not interrupt a live install.
     systemctl enable robopi-ethernet-mac.service 2>/dev/null || true
-    # Hardware test: drive GPIO1_B0 / GPIO0_C2 high on GPIO1_D5 button press.
     systemctl enable robopi-hw-test.service 2>/dev/null || true
-    systemctl start robopi-hw-test.service 2>/dev/null || true
+    systemctl enable robopi-fan.service 2>/dev/null || true
+
+    if ! is_chroot; then
+        running_kernel=$(uname -r)
+        if [ "$running_kernel" = "$TARGET_KERNEL_RELEASE" ]; then
+            modprobe "$MODULE_NAME"
+        else
+            echo "robopi-addon: module targets $TARGET_KERNEL_RELEASE; current kernel is $running_kernel" >&2
+            echo "robopi-addon: module will load after booting the matching kernel" >&2
+        fi
+
+        systemctl start wifi-reset.service 2>/dev/null || true
+        systemctl start hpm-reset.service 2>/dev/null || true
+        systemctl start robopi-hw-test.service 2>/dev/null || true
+        systemctl restart robopi-fan.service 2>/dev/null || true
+    fi
 fi
 
 #DEBHELPER#

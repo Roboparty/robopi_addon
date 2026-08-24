@@ -1,13 +1,13 @@
 #!/bin/sh
 set -e
 
-DKMS_NAME=robopi-ws2812
-DKMS_VERSION=$(dpkg-query -W -f='${Version}' robopi-addon 2>/dev/null | cut -d'-' -f1)
+TARGET_KERNEL_RELEASE=6.1.99-rt36-rockchip-rk3588
 
 if [ "$1" = remove ] || [ "$1" = deconfigure ]; then
-    modprobe -r robopi-ws2812 2>/dev/null || true
-    if command -v dkms >/dev/null 2>&1; then
-        dkms remove -m "$DKMS_NAME" -v "$DKMS_VERSION" --all || true
+    systemctl stop robopi-fan.service 2>/dev/null || true
+
+    if [ "$(uname -r)" = "$TARGET_KERNEL_RELEASE" ]; then
+        modprobe -r robopi-ws2812 2>/dev/null || true
     fi
 fi
 

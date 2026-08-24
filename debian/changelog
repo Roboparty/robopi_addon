@@ -1,3 +1,20 @@
+robopi-addon (1.6.6-1) stable; urgency=medium
+
+  * Add and enable robopi-fan.service to turn FAN_SW on automatically at boot.
+  * Turn FAN_SW off when the service is stopped or the package is removed.
+
+ -- fanxiaobinggit <16692712013@163.com>  Mon, 24 Aug 2026 18:30:00 +0800
+
+robopi-addon (1.6.5-1) stable; urgency=medium
+
+  * Replace install-time DKMS compilation with a prebuilt ARM64 WS2812 module
+    for Linux 6.1.99-rt36-rockchip-rk3588.
+  * Install the module under the target kernel extra directory and refresh
+    module dependencies without using the image-build host kernel.
+  * Remove stale DKMS registrations when upgrading from older releases.
+
+ -- fanxiaobinggit <16692712013@163.com>  Mon, 24 Aug 2026 16:30:00 +0800
+
 robopi-addon (1.6.4-1) stable; urgency=medium
 
   * Add on/off control for the active-high GPIO1_D7 FAN_SW output.

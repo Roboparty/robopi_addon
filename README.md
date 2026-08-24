@@ -19,7 +19,7 @@ be enabled by the system.
 - Solid color, flash, chase, rainbow, and demo effects
 - `robopi-sig-key` SIG/key GPIO helper
 - Native ARM64 build support
-- DKMS-based kernel module installation with automatic rebuild on kernel updates
+- Prebuilt kernel module for Linux 6.1.99-rt36-rockchip-rk3588
 - Debian packaging for installation and removal
 
 ## Commands
@@ -73,7 +73,13 @@ Start with low RGB values such as `16-64` to avoid excessive power draw.
 
 ## Build deb package
 
-Build natively on the ARM64 board:
+The package contains the prebuilt module for its fixed target kernel:
+
+```text
+prebuilt/6.1.99-rt36-rockchip-rk3588/robopi-ws2812.ko
+```
+
+Build the package on the ARM64 board:
 
 ```bash
 sudo apt install build-essential debhelper
@@ -84,16 +90,16 @@ The `.deb` file will be generated in the parent directory.
 
 ## Install
 
-The kernel module is built at install time by DKMS against the running kernel,
-so the matching headers must be available on the target:
+The package installs a prebuilt module, so DKMS and kernel headers are not
+required on the target:
 
 ```bash
-sudo apt install dkms linux-headers-$(uname -r)
 sudo apt install ../robopi-addon_*_arm64.deb
 ```
 
-DKMS rebuilds `robopi-ws2812` automatically whenever the kernel is updated.
-The module is loaded at boot via `/etc/modules-load.d/robopi-ws2812.conf`.
+The module is installed under `/lib/modules/6.1.99-rt36-rockchip-rk3588/extra/`
+and loaded at boot via `/etc/modules-load.d/robopi-ws2812.conf`. Rebuild the
+`.ko` and publish a new package whenever the target kernel changes.
 
 ## Stable Ethernet MAC experiment
 
@@ -157,8 +163,8 @@ sudo apt remove robopi-addon
 sudo apt purge robopi-addon
 ```
 
-The `prerm` script removes the DKMS module so the driver is also uninstalled
-from every kernel it was built for.
+The removal scripts unload the running module and refresh the target kernel's
+module dependency index.
 
 ## Compile-time configuration
 
@@ -246,4 +252,10 @@ sudo robopi-fan off
 robopi-fan status
 ```
 
-The command uses the GPIO sysfs interface so the selected output remains in effect after the command exits. No boot service is installed; software that needs the fan should explicitly run `robopi-fan on` or `robopi-fan off` after a reboot.
+The command uses the GPIO sysfs interface so the selected output remains in effect after the command exits. The package enables `robopi-fan.service`, which turns FAN_SW on automatically at boot. Stopping the service turns the fan off:
+
+```bash
+systemctl status robopi-fan.service
+sudo systemctl stop robopi-fan.service
+sudo systemctl start robopi-fan.service
+```
