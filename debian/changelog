@@ -1,3 +1,9 @@
+robopi-addon (1.6.4-1) stable; urgency=medium
+
+  * Add on/off control for the active-high GPIO1_D7 FAN_SW output.
+
+ -- fanxiaobinggit <16692712013@163.com>  Mon, 24 Aug 2026 10:30:00 +0800
+
 robopi-addon (1.6.3-1) stable; urgency=medium
 
   * Fix DKMS builds on the RoboPi2 Rockchip kernel headers by invoking the
