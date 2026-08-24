@@ -40,6 +40,7 @@ if [ "$1" = configure ]; then
     systemctl enable robopi-ethernet-mac.service 2>/dev/null || true
     systemctl enable robopi-hw-test.service 2>/dev/null || true
     systemctl enable robopi-fan.service 2>/dev/null || true
+    systemctl enable robopi-ws2812-white.service 2>/dev/null || true
 
     if ! is_chroot; then
         running_kernel=$(uname -r)
@@ -54,6 +55,7 @@ if [ "$1" = configure ]; then
         systemctl start hpm-reset.service 2>/dev/null || true
         systemctl start robopi-hw-test.service 2>/dev/null || true
         systemctl restart robopi-fan.service 2>/dev/null || true
+        systemctl restart robopi-ws2812-white.service 2>/dev/null || true
     fi
 fi
 

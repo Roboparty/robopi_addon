@@ -1,0 +1,13 @@
+[Unit]
+Description=RoboPi WS2812 boot white light
+After=systemd-modules-load.service
+Requires=systemd-modules-load.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/roboparty/bin/robopi-ws2812 solid 255 255 255
+ExecStop=/opt/roboparty/bin/robopi-ws2812 off
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

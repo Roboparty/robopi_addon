@@ -64,6 +64,8 @@ install: all check-prebuilt-module
 		$(DESTDIR)/lib/systemd/system/robopi-hw-test.service
 	install -D -m 0644 etc/systemd/system/robopi-fan.service \
 		$(DESTDIR)/lib/systemd/system/robopi-fan.service
+	install -D -m 0644 etc/systemd/system/robopi-ws2812-white.service \
+		$(DESTDIR)/lib/systemd/system/robopi-ws2812-white.service
 	install -D -m 0755 scripts/reset_hpm.sh \
 		$(DESTDIR)/opt/roboparty/bin/reset_hpm.sh
 	install -D -m 0755 scripts/autoflash_hpm.sh \

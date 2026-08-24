@@ -55,6 +55,17 @@ sudo robopi-ws2812 demo
 robopi-ws2812 --help
 ```
 
+软件包会启用 `robopi-ws2812-white.service`。开机加载内核模块后，该服务会将
+全部灯珠设置为全亮白光（`255 255 255`）；停止服务时会关闭灯带：
+
+```bash
+systemctl status robopi-ws2812-white.service
+sudo systemctl stop robopi-ws2812-white.service
+sudo systemctl start robopi-ws2812-white.service
+```
+
+全亮白光的功耗最高，请确认 5V 电源和连接线能够承受 18 颗灯珠的总电流。
+
 持续运行的效果可以按 `Ctrl+C` 停止，程序退出前会自动熄灭灯带。
 
 ## 参数说明

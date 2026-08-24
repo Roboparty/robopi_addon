@@ -4,6 +4,7 @@ set -e
 TARGET_KERNEL_RELEASE=6.1.99-rt36-rockchip-rk3588
 
 if [ "$1" = remove ] || [ "$1" = deconfigure ]; then
+    systemctl stop robopi-ws2812-white.service 2>/dev/null || true
     systemctl stop robopi-fan.service 2>/dev/null || true
 
     if [ "$(uname -r)" = "$TARGET_KERNEL_RELEASE" ]; then

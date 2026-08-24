@@ -71,6 +71,19 @@ Continuous effects stop with `Ctrl+C` and turn the strip off before exiting.
 
 Start with low RGB values such as `16-64` to avoid excessive power draw.
 
+The package enables `robopi-ws2812-white.service`. After the kernel module is
+loaded during boot, the service sets all LEDs to steady full white
+(`255 255 255`). Stopping the service turns the strip off:
+
+```bash
+systemctl status robopi-ws2812-white.service
+sudo systemctl stop robopi-ws2812-white.service
+sudo systemctl start robopi-ws2812-white.service
+```
+
+Full white has the highest power consumption. Make sure the 5 V supply and
+wiring can carry the current required by all 18 LEDs.
+
 ## Build deb package
 
 The package contains the prebuilt module for its fixed target kernel:
