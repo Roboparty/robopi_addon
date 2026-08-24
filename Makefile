@@ -9,7 +9,7 @@ DKMS_DIR ?= $(DESTDIR)/usr/src/robopi-ws2812-$(VERSION)
 
 .PHONY: all clean install package kernel
 
-all: build/robopi-ws2812 build/robopi-sig-key
+all: build/robopi-ws2812 build/robopi-sig-key build/robopi-hw-test
 
 build/robopi-ws2812: src/ws2812_pwm6.c
 	mkdir -p build
@@ -19,15 +19,21 @@ build/robopi-sig-key: src/sig_led_key.c
 	mkdir -p build
 	$(CC) $(CFLAGS) -o $@ $<
 
+build/robopi-hw-test: src/hw_test.c
+	mkdir -p build
+	$(CC) $(CFLAGS) -o $@ $<
+
 kernel:
 	$(MAKE) -C $(KDIR) M=$(CURDIR)/src modules
 
 install: all
 	install -D -m 0755 build/robopi-ws2812 $(DESTDIR)/opt/roboparty/bin/robopi-ws2812
 	install -D -m 0755 build/robopi-sig-key $(DESTDIR)/opt/roboparty/bin/robopi-sig-key
+	install -D -m 0755 build/robopi-hw-test $(DESTDIR)/opt/roboparty/bin/robopi-hw-test
 	install -d $(DESTDIR)/usr/bin
 	ln -sf /opt/roboparty/bin/robopi-ws2812 $(DESTDIR)/usr/bin/robopi-ws2812
 	ln -sf /opt/roboparty/bin/robopi-sig-key $(DESTDIR)/usr/bin/robopi-sig-key
+	ln -sf /opt/roboparty/bin/robopi-hw-test $(DESTDIR)/usr/bin/robopi-hw-test
 	install -D -m 0755 scripts/robopi-ethernet-mac.sh \
 		$(DESTDIR)/opt/roboparty/bin/robopi-ethernet-mac
 	ln -sf /opt/roboparty/bin/robopi-ethernet-mac $(DESTDIR)/usr/bin/robopi-ethernet-mac
@@ -43,6 +49,8 @@ install: all
 		$(DESTDIR)/lib/systemd/system/robopi-ethernet-mac.service
 	install -D -m 0644 etc/systemd/system/hpm-autoflash.service \
 		$(DESTDIR)/lib/systemd/system/hpm-autoflash.service
+	install -D -m 0644 etc/systemd/system/robopi-hw-test.service \
+		$(DESTDIR)/lib/systemd/system/robopi-hw-test.service
 	install -D -m 0755 scripts/reset_hpm.sh \
 		$(DESTDIR)/opt/roboparty/bin/reset_hpm.sh
 	install -D -m 0755 scripts/autoflash_hpm.sh \
