@@ -220,3 +220,20 @@ sudo robopi-sig-key --led-active-low
 sudo systemctl enable --now robopi-sig-key.service
 journalctl -u robopi-sig-key.service -f
 ```
+
+## FAN_SW 风扇开关
+
+FAN_SW 使用 GPIO1_D7（全局 GPIO63）。根据板卡原理图，该控制信号为高电平有效：高电平接通 `VCC_5V_FAN`，低电平关闭风扇电源。
+
+```bash
+# 开启风扇
+sudo robopi-fan on
+
+# 关闭风扇
+sudo robopi-fan off
+
+# 查看当前状态
+robopi-fan status
+```
+
+程序使用 GPIO sysfs 接口保持输出状态，不提供开机自启动服务。重新启动系统后，应由需要使用风扇的程序再次明确执行 `robopi-fan on` 或 `robopi-fan off`。

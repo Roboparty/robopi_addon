@@ -36,7 +36,10 @@ install: all
 	ln -sf /opt/roboparty/bin/robopi-hw-test $(DESTDIR)/usr/bin/robopi-hw-test
 	install -D -m 0755 scripts/robopi-ethernet-mac.sh \
 		$(DESTDIR)/opt/roboparty/bin/robopi-ethernet-mac
+	install -D -m 0755 scripts/robopi-fan.sh \
+		$(DESTDIR)/opt/roboparty/bin/robopi-fan
 	ln -sf /opt/roboparty/bin/robopi-ethernet-mac $(DESTDIR)/usr/bin/robopi-ethernet-mac
+	ln -sf /opt/roboparty/bin/robopi-fan $(DESTDIR)/usr/bin/robopi-fan
 	install -D -m 0644 etc/systemd/system/robopi-sig-key.service \
 		$(DESTDIR)/lib/systemd/system/robopi-sig-key.service
 	install -D -m 0644 etc/modules-load.d/robopi-ws2812.conf \
