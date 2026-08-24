@@ -111,13 +111,6 @@ static int set_value(int fd, int value)
     return ioctl(fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &data);
 }
 
-static uint64_t monotonic_ms(void)
-{
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (uint64_t)ts.tv_sec * 1000u + (uint64_t)ts.tv_nsec / 1000000u;
-}
-
 int main(int argc, char **argv)
 {
     struct options opt = {
@@ -191,7 +184,9 @@ int main(int argc, char **argv)
     uint64_t last_rising_ms = 0;
     while (running) {
         struct pollfd pfd = { .fd = button_fd, .events = POLLIN };
-        int ready = poll(&pfd, 1, -1);
+        /* Use a bounded wait so SIGINT/SIGTERM always reaches the cleanup
+         * path, including on libc implementations that restart poll(). */
+        int ready = poll(&pfd, 1, 250);
         if (ready < 0) {
             if (errno == EINTR) continue;
             fprintf(stderr, "Button poll failed: %s\n", strerror(errno));

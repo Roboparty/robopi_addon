@@ -230,3 +230,20 @@ After validating the foreground test, enable the service at boot:
 sudo systemctl enable --now robopi-sig-key.service
 journalctl -u robopi-sig-key.service -f
 ```
+
+## FAN_SW fan switch
+
+FAN_SW uses GPIO1_D7 (global GPIO 63). According to the board schematic, the signal is active high: a high level enables `VCC_5V_FAN`, while a low level turns the fan supply off.
+
+```bash
+# Turn the fan on
+sudo robopi-fan on
+
+# Turn the fan off
+sudo robopi-fan off
+
+# Show the current state
+robopi-fan status
+```
+
+The command uses the GPIO sysfs interface so the selected output remains in effect after the command exits. No boot service is installed; software that needs the fan should explicitly run `robopi-fan on` or `robopi-fan off` after a reboot.
