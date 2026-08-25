@@ -1,3 +1,11 @@
+robopi-addon (1.6.8-1) stable; urgency=medium
+
+  * Preserve prebuilt kernel modules as binary data in Git to prevent CRLF
+    conversion from corrupting their ELF section headers.
+  * Re-add the Linux 6.1.99 RT ARM64 robopi-ws2812 module without text filters.
+
+ -- fanxiaobinggit <16692712013@163.com>  Tue, 25 Aug 2026 10:30:00 +0800
+
 robopi-addon (1.6.7-1) stable; urgency=medium
 
   * Add and enable robopi-ws2812-white.service to set all WS2812 LEDs to

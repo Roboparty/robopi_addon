@@ -4,3 +4,6 @@
 
 # Keep binary firmware as-is (no line-ending conversion).
 *.bin -text
+*.ko  -text
+*.deb -text
+*.ddeb -text
