@@ -14,6 +14,7 @@
 #include <linux/platform_device.h>
 #include <linux/pinctrl/consumer.h>
 #include <linux/preempt.h>
+#include <linux/timekeeping.h>
 #include <linux/uaccess.h>
 
 #define PWM6_PHYS       0xfebd0020
@@ -26,13 +27,14 @@
 #define FRAME_BYTES     (LED_COUNT * 3)
 
 /* WS2812B-MINI-V3/W timing targets from the device data sheet. */
-#define WS2812_PERIOD_NS 1250
+#define WS2812_PERIOD_NS    1250
 #define WS2812_T0H_NS     330
 #define WS2812_T1H_NS     650
 #define WS2812_RESET_US   300
 
-/* Match the validated RK3588 oneshot sequence used by ws2812_pwm.c. */
-#define ONESHOT_CTRL    (BIT(0) | BIT(3) | BIT(5) | BIT(8) | BIT(9) | BIT(16))
+/* RK3588 uses the lock-capable Rockchip PWM v3 register layout. */
+#define PWM_ENABLE_CTRL (BIT(0) | BIT(1) | BIT(3))
+#define PWM_LOCK_EN     BIT(6)
 
 static void __iomem *pwm;
 static struct device *pwm_dev;
@@ -45,34 +47,48 @@ static u32 period_ticks;
 static u32 zero_ticks;
 static u32 one_ticks;
 
+static u32 frame_duty(const u8 frame[FRAME_BYTES], unsigned int index)
+{
+	unsigned int byte = index / 8;
+	unsigned int bit = 7 - (index % 8);
+
+	return (frame[byte] & BIT(bit)) ? one_ticks : zero_ticks;
+}
+
+static void wait_until_ns(u64 deadline)
+{
+	while (ktime_get_mono_fast_ns() < deadline)
+		cpu_relax();
+}
+
 static int send_frame(const u8 frame[FRAME_BYTES])
 {
 	unsigned long flags;
-	u32 value;
-	int byte, bit, timeout;
+	unsigned int index;
+	const unsigned int bits = FRAME_BYTES * 8;
+	u64 deadline;
 
 	local_irq_save(flags);
 	preempt_disable();
+	writel(0, pwm + PWM_CTRL);
 	writel(period_ticks, pwm + PWM_PERIOD);
+	writel(frame_duty(frame, 0), pwm + PWM_DUTY);
+	writel(PWM_ENABLE_CTRL, pwm + PWM_CTRL);
+	deadline = ktime_get_mono_fast_ns() + WS2812_PERIOD_NS;
 
-	for (byte = 0; byte < FRAME_BYTES; byte++) {
-		for (bit = 7; bit >= 0; bit--) {
-			writel((frame[byte] & BIT(bit)) ? one_ticks : zero_ticks,
-			       pwm + PWM_DUTY);
-			writel(ONESHOT_CTRL, pwm + PWM_CTRL);
-			timeout = 10000;
-			do {
-				value = readl(pwm + PWM_CTRL);
-				cpu_relax();
-			} while ((value & BIT(0)) && --timeout);
-			if (!timeout) {
-				writel(0, pwm + PWM_CTRL);
-				preempt_enable();
-				local_irq_restore(flags);
-				return -ETIMEDOUT;
-			}
-		}
+	/*
+	 * Keep PWM running continuously.  Lock, stage and unlock each next duty;
+	 * Rockchip PWM v3 applies it at the following period boundary.  This
+	 * removes the software-generated low gaps of the former one-shot loop.
+	 */
+	for (index = 1; index < bits; index++) {
+		writel(PWM_ENABLE_CTRL | PWM_LOCK_EN, pwm + PWM_CTRL);
+		writel(frame_duty(frame, index), pwm + PWM_DUTY);
+		writel(PWM_ENABLE_CTRL, pwm + PWM_CTRL);
+		wait_until_ns(deadline);
+		deadline += WS2812_PERIOD_NS;
 	}
+	wait_until_ns(deadline);
 
 	writel(0, pwm + PWM_CTRL);
 	preempt_enable();

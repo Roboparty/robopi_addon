@@ -194,8 +194,8 @@ The following settings are defined near the top of the kernel module
 ```
 
 The driver derives PWM register ticks from the actual PWM clock at load time.
-At 24 MHz the values are 30/8/16 ticks. Validate timing changes with an
-oscilloscope.
+It uses continuous PWM with lock-latched duty updates, avoiding inter-bit gaps.
+At 24 MHz the values are 30/8/16 ticks. Validate timing with an oscilloscope.
 
 ## SIG rising-edge LED trigger
 

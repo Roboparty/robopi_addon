@@ -1,3 +1,13 @@
+robopi-addon (1.6.11-1) stable; urgency=medium
+
+  * Replace per-bit PWM one-shot transmission with continuous, lock-latched
+    duty updates synchronized by monotonic 1.25 us deadlines.
+  * Eliminate variable inter-bit low gaps that corrupted mixed zero/one data.
+  * Validate all-off, red, green, blue, and white output on a 12-pixel
+    WS2812B-MINI-V3/W light board.
+
+ -- fanxiaobinggit <16692712013@163.com>  Tue, 25 Aug 2026 16:00:00 +0800
+
 robopi-addon (1.6.9-1) stable; urgency=medium
 
   * Configure the WS2812 controller for the 12-pixel light board.

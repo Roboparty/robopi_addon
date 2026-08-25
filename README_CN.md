@@ -181,8 +181,9 @@ sudo apt purge robopi-addon
 #define WS2812_RESET_US   300
 ```
 
-驱动加载时会根据实际 PWM 时钟自动计算寄存器计数值；24 MHz 时为
-30/8/16 ticks。修改 WS2812 时序参数后，必须使用示波器验证实际输出波形。
+驱动加载时会根据实际 PWM 时钟自动计算寄存器计数值，并使用连续 PWM 与锁存
+占空比更新，避免逐 bit one-shot 产生额外低电平间隔。24 MHz 时为 30/8/16
+ticks。必须使用示波器验证实际输出波形。
 
 ## SIG 上升沿触发 LED
 
