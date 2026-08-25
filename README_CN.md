@@ -5,7 +5,7 @@
 RoboPi RK3588S 平台的附加工具包，包含 WS2812 灯带控制和 SIG/按键 GPIO 辅助工具，
 不依赖 `roboparty-base`。
 
-- `robopi-ws2812`：通过 PWM6_M1 控制 18 颗串联 WS2812 灯珠
+- `robopi-ws2812`：通过 PWM6_M1 控制 12 颗串联 WS2812B-MINI-V3/W 灯珠
 - `robopi-sig-key`：SIG 上升沿触发 LED 输出与按键处理
 - `robopi-ethernet-mac`：从 RK3588 Chip ID 派生并应用稳定的以太网 MAC
 
@@ -64,7 +64,7 @@ sudo systemctl stop robopi-ws2812-white.service
 sudo systemctl start robopi-ws2812-white.service
 ```
 
-全亮白光的功耗最高，请确认 5V 电源和连接线能够承受 18 颗灯珠的总电流。
+全亮白光的功耗最高，请确认 5V 电源和连接线能够承受 12 颗灯珠的总电流。
 
 持续运行的效果可以按 `Ctrl+C` 停止，程序退出前会自动熄灭灯带。
 
@@ -75,7 +75,7 @@ sudo systemctl start robopi-ws2812-white.service
 | `R G B` | `0-255` | 红、绿、蓝三种颜色的亮度 |
 | `间隔毫秒` / `步进毫秒` | `10-60000` | 动画每一步的时间 |
 | `次数` | `0-1000000` | 闪烁次数；`0` 表示持续运行 |
-| `亮灯宽度` | `1-18` | 流水灯同时点亮的灯珠数量 |
+| `亮灯宽度` | `1-12` | 流水灯同时点亮的灯珠数量 |
 
 建议先使用 `16-64` 的较低 RGB 数值测试，避免电源电流过大。
 
@@ -173,14 +173,16 @@ sudo apt purge robopi-addon
 以下设置位于内核模块 `src/robopi-ws2812.c` 文件开头，修改后需要重新构建：
 
 ```c
-#define LED_COUNT       18
+#define LED_COUNT       12
 #define PWM6_PHYS       0xfebd0020
-#define PERIOD_TICKS    18
-#define ZERO_TICKS      6
-#define ONE_TICKS       12
+#define WS2812_PERIOD_NS 1250
+#define WS2812_T0H_NS     330
+#define WS2812_T1H_NS     650
+#define WS2812_RESET_US   300
 ```
 
-修改 WS2812 时序参数后，必须使用示波器验证实际输出波形。
+驱动加载时会根据实际 PWM 时钟自动计算寄存器计数值；24 MHz 时为
+30/8/16 ticks。修改 WS2812 时序参数后，必须使用示波器验证实际输出波形。
 
 ## SIG 上升沿触发 LED
 

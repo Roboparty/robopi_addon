@@ -7,6 +7,7 @@
 #include <linux/device.h>
 #include <linux/fs.h>
 #include <linux/io.h>
+#include <linux/math64.h>
 #include <linux/miscdevice.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
@@ -21,13 +22,14 @@
 #define PWM_DUTY        0x08
 #define PWM_CTRL        0x0c
 
-#define LED_COUNT       18
+#define LED_COUNT       12
 #define FRAME_BYTES     (LED_COUNT * 3)
 
-/* RoboPi2 PWM6 timing validated by the original direct-MMIO backend. */
-#define PERIOD_TICKS    18
-#define ZERO_TICKS      6
-#define ONE_TICKS       12
+/* WS2812B-MINI-V3/W timing targets from the device data sheet. */
+#define WS2812_PERIOD_NS 1250
+#define WS2812_T0H_NS     330
+#define WS2812_T1H_NS     650
+#define WS2812_RESET_US   300
 
 /* Match the validated RK3588 oneshot sequence used by ws2812_pwm.c. */
 #define ONESHOT_CTRL    (BIT(0) | BIT(3) | BIT(5) | BIT(8) | BIT(9) | BIT(16))
@@ -39,6 +41,9 @@ static struct clk *pclk;
 static struct pinctrl *pwm_pinctrl;
 static struct pinctrl_state *pwm_active_state;
 static DEFINE_MUTEX(tx_lock);
+static u32 period_ticks;
+static u32 zero_ticks;
+static u32 one_ticks;
 
 static int send_frame(const u8 frame[FRAME_BYTES])
 {
@@ -48,11 +53,11 @@ static int send_frame(const u8 frame[FRAME_BYTES])
 
 	local_irq_save(flags);
 	preempt_disable();
-	writel(PERIOD_TICKS, pwm + PWM_PERIOD);
+	writel(period_ticks, pwm + PWM_PERIOD);
 
 	for (byte = 0; byte < FRAME_BYTES; byte++) {
 		for (bit = 7; bit >= 0; bit--) {
-			writel((frame[byte] & BIT(bit)) ? ONE_TICKS : ZERO_TICKS,
+			writel((frame[byte] & BIT(bit)) ? one_ticks : zero_ticks,
 			       pwm + PWM_DUTY);
 			writel(ONESHOT_CTRL, pwm + PWM_CTRL);
 			timeout = 10000;
@@ -72,7 +77,8 @@ static int send_frame(const u8 frame[FRAME_BYTES])
 	writel(0, pwm + PWM_CTRL);
 	preempt_enable();
 	local_irq_restore(flags);
-	udelay(80);
+	/* The WS2812B-MINI-V3/W requires at least 280 us low to latch. */
+	udelay(WS2812_RESET_US);
 	return 0;
 }
 
@@ -109,6 +115,7 @@ static struct miscdevice ws2812_misc = {
 
 static int __init robopi_ws2812_init(void)
 {
+	unsigned long rate;
 	int ret;
 
 	pwm_dev = bus_find_device_by_name(&platform_bus_type, NULL,
@@ -157,6 +164,27 @@ static int __init robopi_ws2812_init(void)
 	ret = clk_prepare_enable(pwm_clk);
 	if (ret)
 		goto err_disable_pclk;
+
+	/*
+	 * Derive register values from the actual PWM clock. At 24 MHz these
+	 * evaluate to period=30, T0H=8 and T1H=16 ticks.
+	 */
+	rate = clk_get_rate(pwm_clk);
+	if (!rate) {
+		ret = -EINVAL;
+		goto err_disable_pwm_clk;
+	}
+	period_ticks = DIV_ROUND_CLOSEST_ULL((u64)rate * WS2812_PERIOD_NS,
+					      1000000000ULL);
+	zero_ticks = DIV_ROUND_CLOSEST_ULL((u64)rate * WS2812_T0H_NS,
+					    1000000000ULL);
+	one_ticks = DIV_ROUND_CLOSEST_ULL((u64)rate * WS2812_T1H_NS,
+					   1000000000ULL);
+	if (!zero_ticks || zero_ticks >= period_ticks ||
+	    !one_ticks || one_ticks >= period_ticks || zero_ticks >= one_ticks) {
+		ret = -ERANGE;
+		goto err_disable_pwm_clk;
+	}
 	pwm = ioremap(PWM6_PHYS, PWM_MAP_SIZE);
 	if (!pwm) {
 		ret = -ENOMEM;
@@ -166,7 +194,8 @@ static int __init robopi_ws2812_init(void)
 	ret = misc_register(&ws2812_misc);
 	if (ret)
 		goto err_unmap;
-	pr_info("robopi_ws2812: PWM6_M1 ready, %d LEDs\n", LED_COUNT);
+	pr_info("robopi_ws2812: PWM6_M1 ready, %d LEDs, clk=%lu Hz, ticks=%u/%u/%u\n",
+		LED_COUNT, rate, period_ticks, zero_ticks, one_ticks);
 	return 0;
 
 err_unmap:

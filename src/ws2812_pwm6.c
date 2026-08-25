@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 // Copyright (C) 2025-2026 fanxiaobinggit
-// RoboPi2 RK3588S PWM6_M1 (GPIO4_C1) WS2812 controller, 18 LEDs.
+// RoboPi2 RK3588S PWM6_M1 (GPIO4_C1) WS2812 controller, 12 LEDs.
 // Frames are transmitted by the robopi-ws2812 kernel module.
 // Build: gcc -O3 -Wall -Wextra -o ws2812_pwm6 ws2812_pwm6.c -lm
 // Run:   sudo robopi-ws2812 <off|on|solid|flash|chase|rainbow|demo> [args]
@@ -15,7 +15,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define LED_COUNT       18
+#define LED_COUNT       12
 #define FRAME_BYTES     (LED_COUNT * 3)
 #define DEVICE_PATH     "/dev/robopi-ws2812"
 
@@ -95,7 +95,7 @@ static void usage(const char *p) {
     printf("  sudo %s flash R G B [ms] [count]   count=0: until Ctrl+C\n", p);
     printf("  sudo %s chase R G B [ms] [width]\n", p);
     printf("  sudo %s rainbow [ms]\n", p);
-    printf("  sudo %s timing                     repeat 0xAA for scope\n", p);
+    printf("  sudo %s timing                     repeat all-zero frames for scope\n", p);
     printf("  sudo %s demo                       8-second test, then off\n", p);
 }
 
@@ -145,7 +145,8 @@ int main(int argc, char **argv) {
             if (send_frame(f)) { rc=1; break; } usleep(ms*1000);
         }
     } else if (!strcmp(cmd, "timing")) {
-        memset(f, 0xaa, sizeof(f));
+        /* Keep every pixel off while exposing the 0-bit waveform to a scope. */
+        memset(f, 0x00, sizeof(f));
         while (running) {
             if (send_frame(f)) { rc=1; break; }
             usleep(10000);

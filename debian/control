@@ -13,6 +13,6 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, kmod, roboparty-base (>= 1.0.0),
 Replaces: roboparty-ws2812 (<< 1.5.0), roboparty-base (<= 1.1.2-1)
 Breaks: roboparty-ws2812 (<< 1.5.0)
 Description: RoboPi RK3588S WS2812 and SIG/key GPIO helpers
- Controls an 18-pixel WS2812 strip from PWM6_M1 on the RoboParty RK3588S
+ Controls a 12-pixel WS2812B-MINI-V3/W strip from PWM6_M1 on the RoboParty RK3588S
  board through a kernel PWM transmitter. Also provides SIG-controlled LED output and gated key handling for
  GPIO3_B1, GPIO3_B6, and GPIO3_B4.

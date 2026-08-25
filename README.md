@@ -5,7 +5,7 @@
 Add-on toolkit for the RoboPi RK3588S platform: WS2812 strip control and
 SIG/key GPIO helpers. It does not depend on `roboparty-base`.
 
-- `robopi-ws2812`: controls 18 daisy-chained WS2812 LEDs through PWM6_M1
+- `robopi-ws2812`: controls 12 daisy-chained WS2812B-MINI-V3/W LEDs through PWM6_M1
 - `robopi-sig-key`: SIG rising-edge LED output and key handling
 - `robopi-ethernet-mac`: derives and applies a stable Ethernet MAC from the RK3588 Chip ID
 
@@ -67,7 +67,7 @@ Continuous effects stop with `Ctrl+C` and turn the strip off before exiting.
 | `R G B` | `0-255` | Red, green, and blue brightness |
 | `interval_ms` / `step_ms` | `10-60000` | Animation interval in milliseconds |
 | `count` | `0-1000000` | Flash count; `0` means continuous |
-| `width` | `1-18` | Number of illuminated chase pixels |
+| `width` | `1-12` | Number of illuminated chase pixels |
 
 Start with low RGB values such as `16-64` to avoid excessive power draw.
 
@@ -82,7 +82,7 @@ sudo systemctl start robopi-ws2812-white.service
 ```
 
 Full white has the highest power consumption. Make sure the 5 V supply and
-wiring can carry the current required by all 18 LEDs.
+wiring can carry the current required by all 12 LEDs.
 
 ## Build deb package
 
@@ -185,14 +185,17 @@ The following settings are defined near the top of the kernel module
 `src/robopi-ws2812.c` and require a rebuild after modification:
 
 ```c
-#define LED_COUNT       18
+#define LED_COUNT       12
 #define PWM6_PHYS       0xfebd0020
-#define PERIOD_TICKS    18
-#define ZERO_TICKS      6
-#define ONE_TICKS       12
+#define WS2812_PERIOD_NS 1250
+#define WS2812_T0H_NS     330
+#define WS2812_T1H_NS     650
+#define WS2812_RESET_US   300
 ```
 
-Validate all timing changes with an oscilloscope.
+The driver derives PWM register ticks from the actual PWM clock at load time.
+At 24 MHz the values are 30/8/16 ticks. Validate timing changes with an
+oscilloscope.
 
 ## SIG rising-edge LED trigger
 
