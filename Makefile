@@ -76,8 +76,8 @@ install: all check-prebuilt-module
 		$(DESTDIR)/opt/roboparty/bin/flash_hpm.sh
 	install -D -m 0755 scripts/hpmtool.py \
 		$(DESTDIR)/opt/roboparty/bin/hpmtool
-	install -D -m 0644 firmware/ethercanfd_v1.0.3-20260818.bin \
-		$(DESTDIR)/opt/roboparty/lib/firmware/ethercanfd_v1.0.3-20260818.bin
+	install -D -m 0644 firmware/ethercanfd_v1.0.5-20260826.bin \
+		$(DESTDIR)/opt/roboparty/lib/firmware/ethercanfd_v1.0.5-20260826.bin
 	install -D -m 0644 etc/default/hpm-reset \
 		$(DESTDIR)/etc/default/hpm-reset
 	install -D -m 0644 etc/default/wifi-reset \
