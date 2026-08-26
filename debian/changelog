@@ -1,3 +1,12 @@
+robopi-addon (1.6.16-1) stable; urgency=medium
+
+  * Ship an optional RK3588S RoboPi2 device-tree source patch that selects
+    maximum drive level 5 for the GPIO0_C2 dual-battery output.
+  * Add a guarded status, apply, and restore helper for installing the same
+    setting into the configured boot DTB with automatic backup and validation.
+
+ -- fanxiaobinggit <16692712013@163.com>  Wed, 26 Aug 2026 21:00:00 +0800
+
 robopi-addon (1.6.15-1) stable; urgency=medium
 
   * Set GPIO1_B0 and GPIO0_C2 high after a short SIG button press, and

@@ -280,3 +280,38 @@ systemctl status robopi-fan.service
 sudo systemctl stop robopi-fan.service
 sudo systemctl start robopi-fan.service
 ```
+### GPIO0_C2 maximum-drive device-tree patch
+
+The package ships an optional kernel source patch for the RoboPi2 CM5 device
+tree at:
+
+```text
+/usr/share/robopi-addon/patches/0001-rk3588s-robopi2-gpio0-c2-max-drive.patch
+```
+
+Apply it from the root of the matching Linux kernel source tree, rebuild
+`rk3588s-orangepi-cm5-robopi2.dtb`, install the rebuilt DTB, and reboot.  The
+patch selects `pcfg_pull_down_drv_level_5` for GPIO0_C2.  On RK3588 GPIO0_C,
+level 5 is the maximum-drive register setting (approximately 25 ohms); level
+numbers are hardware encodings and are not ordered by output strength.
+
+```bash
+git apply /usr/share/robopi-addon/patches/0001-rk3588s-robopi2-gpio0-c2-max-drive.patch
+```
+
+On an installed RoboPi2 system, the packaged helper can safely patch the
+configured boot DTB without a kernel source tree:
+
+```bash
+sudo robopi-gpio0-c2-drive status
+sudo robopi-gpio0-c2-drive apply
+sudo reboot
+```
+
+The first `apply` preserves the original DTB beside it with the suffix
+`.robopi-before-gpio0-c2-drive`. To roll back, run:
+
+```bash
+sudo robopi-gpio0-c2-drive restore
+sudo reboot
+```

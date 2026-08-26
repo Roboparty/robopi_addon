@@ -267,3 +267,36 @@ systemctl status robopi-fan.service
 sudo systemctl stop robopi-fan.service
 sudo systemctl start robopi-fan.service
 ```
+### GPIO0_C2 最大驱动能力设备树补丁
+
+软件包提供一个可选的 RoboPi2 CM5 内核设备树源码补丁，安装位置为：
+
+```text
+/usr/share/robopi-addon/patches/0001-rk3588s-robopi2-gpio0-c2-max-drive.patch
+```
+
+请在匹配版本的 Linux 内核源码根目录应用补丁，重新编译
+`rk3588s-orangepi-cm5-robopi2.dtb`，安装新 DTB 后重启。补丁为 GPIO0_C2
+选择 `pcfg_pull_down_drv_level_5`。RK3588 GPIO0_C 的 Level5 是约 25Ω 的
+最大驱动档；Level 数值是硬件编码，并不按驱动能力大小顺序排列。
+
+```bash
+git apply /usr/share/robopi-addon/patches/0001-rk3588s-robopi2-gpio0-c2-max-drive.patch
+```
+
+在已安装的 RoboPi2 系统上，也可以不使用内核源码，通过配套命令安全修改当前启动
+DTB：
+
+```bash
+sudo robopi-gpio0-c2-drive status
+sudo robopi-gpio0-c2-drive apply
+sudo reboot
+```
+
+第一次执行 `apply` 会在原 DTB 旁保存后缀为
+`.robopi-before-gpio0-c2-drive` 的备份。需要回退时执行：
+
+```bash
+sudo robopi-gpio0-c2-drive restore
+sudo reboot
+```

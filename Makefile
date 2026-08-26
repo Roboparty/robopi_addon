@@ -44,8 +44,11 @@ install: all check-prebuilt-module
 		$(DESTDIR)/opt/roboparty/bin/robopi-ethernet-mac
 	install -D -m 0755 scripts/robopi-fan.sh \
 		$(DESTDIR)/opt/roboparty/bin/robopi-fan
+	install -D -m 0755 scripts/robopi-gpio0-c2-drive.sh \
+		$(DESTDIR)/opt/roboparty/bin/robopi-gpio0-c2-drive
 	ln -sf /opt/roboparty/bin/robopi-ethernet-mac $(DESTDIR)/usr/bin/robopi-ethernet-mac
 	ln -sf /opt/roboparty/bin/robopi-fan $(DESTDIR)/usr/bin/robopi-fan
+	ln -sf /opt/roboparty/bin/robopi-gpio0-c2-drive $(DESTDIR)/usr/bin/robopi-gpio0-c2-drive
 	install -D -m 0644 etc/systemd/system/robopi-sig-key.service \
 		$(DESTDIR)/lib/systemd/system/robopi-sig-key.service
 	install -D -m 0644 etc/modules-load.d/robopi-ws2812.conf \
@@ -84,6 +87,8 @@ install: all check-prebuilt-module
 		$(DESTDIR)/etc/default/wifi-reset
 	install -D -m 0644 etc/default/robopi-ethernet-mac \
 		$(DESTDIR)/etc/default/robopi-ethernet-mac
+	install -D -m 0644 patches/0001-rk3588s-robopi2-gpio0-c2-max-drive.patch \
+		$(DESTDIR)/usr/share/robopi-addon/patches/0001-rk3588s-robopi2-gpio0-c2-max-drive.patch
 package:
 	dpkg-buildpackage -us -uc -b
 
