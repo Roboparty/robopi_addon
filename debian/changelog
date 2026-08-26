@@ -1,4 +1,9 @@
-<<<<<<< HEAD
+robopi-addon (1.6.13-1) stable; urgency=medium
+
+  * Change the WS2812 boot service default from full white to blue.
+
+ -- fanxiaobinggit <16692712013@163.com>  Wed, 26 Aug 2026 16:00:00 +0800
+
 robopi-addon (1.6.12-1) stable; urgency=medium
 
   * Wait for the configured Ethernet interface to become active before
@@ -7,8 +12,7 @@ robopi-addon (1.6.12-1) stable; urgency=medium
 
  -- fanxiaobinggit <16692712013@163.com>  Wed, 26 Aug 2026 15:00:00 +0800
 
-robopi-addon (1.6.10-1) stable; urgency=medium
->>>>>>> 41787ee132bcc271d71147928e12c25e48ee174c
+robopi-addon (1.6.11-1) stable; urgency=medium
 
   * Replace per-bit PWM one-shot transmission with continuous, lock-latched
     duty updates synchronized by monotonic 1.25 us deadlines.
