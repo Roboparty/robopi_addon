@@ -1,12 +1,13 @@
 [Unit]
 Description=RoboPi hardware test (GPIO1_D5 button drives GPIO1_B0 and GPIO0_C2 high)
 After=multi-user.target
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
 ExecStart=/opt/roboparty/bin/robopi-hw-test
 Restart=on-failure
-RestartSec=1
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target

@@ -3,7 +3,7 @@
 #define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
-#include <linux/gpio.h>
+#include <linux/input.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -11,47 +11,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ioctl.h>
 #include <time.h>
 #include <unistd.h>
+
+#define DEFAULT_INPUT "/dev/input/by-path/platform-gpio-keys-event"
+#define DEFAULT_OUT1  "/sys/class/leds/dual_battery_b0/brightness"
+#define DEFAULT_OUT2  "/sys/class/leds/dual_battery_c2/brightness"
 
 static volatile sig_atomic_t running = 1;
 
 struct options {
-    const char *button_chip;
-    const char *out1_chip;
-    const char *out2_chip;
-    unsigned button_offset;
-    unsigned out1_offset;
-    unsigned out2_offset;
-    bool button_active_low;
-    bool out1_active_low;
-    bool out2_active_low;
-    bool toggle;
+    const char *input;
+    const char *out1;
+    const char *out2;
+    unsigned key_code;
     unsigned debounce_ms;
+    bool toggle;
 };
 
-static void stop_handler(int signo)
-{
-    (void)signo;
-    running = 0;
-}
+static void stop_handler(int signo) { (void)signo; running = 0; }
 
 static void usage(const char *name)
 {
     printf("Usage: %s [options]\n"
-           "  --button-chip PATH   button GPIO chip (default: /dev/gpiochip1)\n"
-           "  --button N           button offset (default: 29 = GPIO1_D5)\n"
-           "  --out1-chip PATH     first output GPIO chip (default: /dev/gpiochip1)\n"
-           "  --out1 N             first output offset (default: 8 = GPIO1_B0)\n"
-           "  --out2-chip PATH     second output GPIO chip (default: /dev/gpiochip0)\n"
-           "  --out2 N             second output offset (default: 18 = GPIO0_C2)\n"
-           "  --button-active-low  invert button logical level\n"
-           "  --out1-active-low    invert out1 electrical level\n"
-           "  --out2-active-low    invert out2 electrical level\n"
-           "  --toggle             toggle outputs on each press (default: latch high)\n"
-           "  --debounce-ms N      rising-edge debounce time (default: 30)\n"
-           "  -h, --help           show this help\n", name);
+           "  --input PATH       input-event device (default: %s)\n"
+           "  --key-code N       Linux input key code (default: 0x105 = BTN_5)\n"
+           "  --out1 PATH        first LED brightness path (default: %s)\n"
+           "  --out2 PATH        second LED brightness path (default: %s)\n"
+           "  --toggle           toggle outputs on each press (default: latch high)\n"
+           "  --debounce-ms N    press debounce time (default: 30)\n"
+           "  -h, --help         show this help\n",
+           name, DEFAULT_INPUT, DEFAULT_OUT1, DEFAULT_OUT2);
 }
 
 static unsigned parse_u32(const char *text, const char *what)
@@ -65,75 +55,49 @@ static unsigned parse_u32(const char *text, const char *what)
     return (unsigned)value;
 }
 
-static int request_events(int chip_fd, unsigned offset, bool active_low,
-                          const char *label)
+static int open_output(const char *path)
 {
-    struct gpioevent_request req;
-    memset(&req, 0, sizeof(req));
-    req.lineoffset = offset;
-    req.handleflags = GPIOHANDLE_REQUEST_INPUT |
-                      GPIOHANDLE_REQUEST_BIAS_DISABLE |
-                      (active_low ? GPIOHANDLE_REQUEST_ACTIVE_LOW : 0);
-    req.eventflags = GPIOEVENT_REQUEST_BOTH_EDGES;
-    snprintf(req.consumer_label, sizeof(req.consumer_label), "%s", label);
-    if (ioctl(chip_fd, GPIO_GET_LINEEVENT_IOCTL, &req) < 0) {
-        fprintf(stderr, "Cannot request %s (offset %u): %s\n",
-                label, offset, strerror(errno));
-        return -1;
-    }
-    return req.fd;
+    int fd = open(path, O_WRONLY | O_CLOEXEC);
+    if (fd < 0)
+        fprintf(stderr, "Cannot open output %s: %s\n", path, strerror(errno));
+    return fd;
 }
 
-static int request_output(int chip_fd, unsigned offset, bool active_low,
-                          const char *label)
+static int set_output(int fd, int value)
 {
-    struct gpiohandle_request req;
-    memset(&req, 0, sizeof(req));
-    req.lineoffsets[0] = offset;
-    req.lines = 1;
-    req.flags = GPIOHANDLE_REQUEST_OUTPUT |
-                (active_low ? GPIOHANDLE_REQUEST_ACTIVE_LOW : 0);
-    req.default_values[0] = 0;
-    snprintf(req.consumer_label, sizeof(req.consumer_label), "%s", label);
-    if (ioctl(chip_fd, GPIO_GET_LINEHANDLE_IOCTL, &req) < 0) {
-        fprintf(stderr, "Cannot request %s (offset %u): %s\n",
-                label, offset, strerror(errno));
+    const char *text = value ? "1\n" : "0\n";
+    if (lseek(fd, 0, SEEK_SET) < 0)
         return -1;
-    }
-    return req.fd;
+    return write(fd, text, 2) == 2 ? 0 : -1;
 }
 
-static int set_value(int fd, int value)
+static uint64_t monotonic_ms(void)
 {
-    struct gpiohandle_data data;
-    memset(&data, 0, sizeof(data));
-    data.values[0] = value ? 1 : 0;
-    return ioctl(fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &data);
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000u + (uint64_t)ts.tv_nsec / 1000000u;
 }
 
 int main(int argc, char **argv)
 {
     struct options opt = {
-        .button_chip = "/dev/gpiochip1",
-        .out1_chip = "/dev/gpiochip1",
-        .out2_chip = "/dev/gpiochip0",
-        .button_offset = 29,  /* GPIO1_D5, button, high when pressed */
-        .out1_offset = 8,     /* GPIO1_B0, first output */
-        .out2_offset = 18,    /* GPIO0_C2, second output */
+        .input = DEFAULT_INPUT,
+        .out1 = DEFAULT_OUT1,
+        .out2 = DEFAULT_OUT2,
+        .key_code = BTN_5,
         .debounce_ms = 30,
     };
+    int input_fd = -1, out1_fd = -1, out2_fd = -1;
+    bool outputs_high = false;
+    uint64_t last_press_ms = 0;
+    int result = EXIT_FAILURE;
 
     for (int i = 1; i < argc; ++i) {
-        if (!strcmp(argv[i], "--button-chip") && i + 1 < argc) opt.button_chip = argv[++i];
-        else if (!strcmp(argv[i], "--button") && i + 1 < argc) opt.button_offset = parse_u32(argv[++i], "button offset");
-        else if (!strcmp(argv[i], "--out1-chip") && i + 1 < argc) opt.out1_chip = argv[++i];
-        else if (!strcmp(argv[i], "--out1") && i + 1 < argc) opt.out1_offset = parse_u32(argv[++i], "out1 offset");
-        else if (!strcmp(argv[i], "--out2-chip") && i + 1 < argc) opt.out2_chip = argv[++i];
-        else if (!strcmp(argv[i], "--out2") && i + 1 < argc) opt.out2_offset = parse_u32(argv[++i], "out2 offset");
+        if (!strcmp(argv[i], "--input") && i + 1 < argc) opt.input = argv[++i];
+        else if (!strcmp(argv[i], "--key-code") && i + 1 < argc) opt.key_code = parse_u32(argv[++i], "key code");
+        else if (!strcmp(argv[i], "--out1") && i + 1 < argc) opt.out1 = argv[++i];
+        else if (!strcmp(argv[i], "--out2") && i + 1 < argc) opt.out2 = argv[++i];
         else if (!strcmp(argv[i], "--debounce-ms") && i + 1 < argc) opt.debounce_ms = parse_u32(argv[++i], "debounce time");
-        else if (!strcmp(argv[i], "--button-active-low")) opt.button_active_low = true;
-        else if (!strcmp(argv[i], "--out1-active-low")) opt.out1_active_low = true;
-        else if (!strcmp(argv[i], "--out2-active-low")) opt.out2_active_low = true;
         else if (!strcmp(argv[i], "--toggle")) opt.toggle = true;
         else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) { usage(argv[0]); return 0; }
         else { usage(argv[0]); return EXIT_FAILURE; }
@@ -142,88 +106,63 @@ int main(int argc, char **argv)
     signal(SIGINT, stop_handler);
     signal(SIGTERM, stop_handler);
 
-    int button_chip_fd = open(opt.button_chip, O_RDONLY | O_CLOEXEC);
-    if (button_chip_fd < 0) {
-        fprintf(stderr, "Cannot open %s: %s\n", opt.button_chip, strerror(errno));
-        return EXIT_FAILURE;
+    input_fd = open(opt.input, O_RDONLY | O_CLOEXEC);
+    if (input_fd < 0) {
+        fprintf(stderr, "Cannot open input %s: %s\n", opt.input, strerror(errno));
+        goto cleanup;
     }
-    int out1_chip_fd = open(opt.out1_chip, O_RDONLY | O_CLOEXEC);
-    if (out1_chip_fd < 0) {
-        fprintf(stderr, "Cannot open %s: %s\n", opt.out1_chip, strerror(errno));
-        close(button_chip_fd);
-        return EXIT_FAILURE;
-    }
-    int out2_chip_fd = open(opt.out2_chip, O_RDONLY | O_CLOEXEC);
-    if (out2_chip_fd < 0) {
-        fprintf(stderr, "Cannot open %s: %s\n", opt.out2_chip, strerror(errno));
-        close(out1_chip_fd);
-        close(button_chip_fd);
-        return EXIT_FAILURE;
-    }
-
-    int button_fd = request_events(button_chip_fd, opt.button_offset,
-                                   opt.button_active_low, "hw-test-button");
-    int out1_fd = request_output(out1_chip_fd, opt.out1_offset,
-                                 opt.out1_active_low, "hw-test-out1");
-    int out2_fd = request_output(out2_chip_fd, opt.out2_offset,
-                                 opt.out2_active_low, "hw-test-out2");
-    if (button_fd < 0 || out1_fd < 0 || out2_fd < 0) {
-        if (out1_fd >= 0) set_value(out1_fd, 0);
-        if (out2_fd >= 0) set_value(out2_fd, 0);
-        return EXIT_FAILURE;
-    }
-
-    if (set_value(out1_fd, 0) < 0 || set_value(out2_fd, 0) < 0) {
+    out1_fd = open_output(opt.out1);
+    out2_fd = open_output(opt.out2);
+    if (out1_fd < 0 || out2_fd < 0)
+        goto cleanup;
+    if (set_output(out1_fd, 0) < 0 || set_output(out2_fd, 0) < 0) {
         fprintf(stderr, "Initial output write failed: %s\n", strerror(errno));
-        return EXIT_FAILURE;
+        goto cleanup;
     }
-    printf("Started: waiting for button (GPIO1_D5) rising edge; outputs low.\n");
-    fflush(stdout);
 
-    bool outputs_high = false;
-    uint64_t last_rising_ms = 0;
+    printf("Started: reading BTN_5 from %s; outputs low.\n", opt.input);
+    fflush(stdout);
+    result = EXIT_SUCCESS;
+
     while (running) {
-        struct pollfd pfd = { .fd = button_fd, .events = POLLIN };
-        /* Use a bounded wait so SIGINT/SIGTERM always reaches the cleanup
-         * path, including on libc implementations that restart poll(). */
+        struct pollfd pfd = { .fd = input_fd, .events = POLLIN };
+        struct input_event event;
         int ready = poll(&pfd, 1, 250);
         if (ready < 0) {
             if (errno == EINTR) continue;
-            fprintf(stderr, "Button poll failed: %s\n", strerror(errno));
+            fprintf(stderr, "Input poll failed: %s\n", strerror(errno));
+            result = EXIT_FAILURE;
             break;
         }
         if (ready == 0) continue;
-
-        struct gpioevent_data event;
-        if (read(button_fd, &event, sizeof(event)) != sizeof(event)) {
+        if (read(input_fd, &event, sizeof(event)) != sizeof(event)) {
             if (errno == EINTR) continue;
-            fprintf(stderr, "Button event read failed: %s\n", strerror(errno));
+            fprintf(stderr, "Input event read failed: %s\n", strerror(errno));
+            result = EXIT_FAILURE;
             break;
         }
-        if (event.id != GPIOEVENT_EVENT_RISING_EDGE) continue;
-
-        uint64_t event_ms = event.timestamp / 1000000u;
-        if (last_rising_ms && event_ms - last_rising_ms < opt.debounce_ms)
+        if (event.type != EV_KEY || event.code != opt.key_code || event.value != 1)
             continue;
-        last_rising_ms = event_ms;
 
+        uint64_t now_ms = monotonic_ms();
+        if (last_press_ms && now_ms - last_press_ms < opt.debounce_ms)
+            continue;
+        last_press_ms = now_ms;
         outputs_high = opt.toggle ? !outputs_high : true;
-        if (set_value(out1_fd, outputs_high) < 0 ||
-            set_value(out2_fd, outputs_high) < 0) {
+        if (set_output(out1_fd, outputs_high) < 0 || set_output(out2_fd, outputs_high) < 0) {
             fprintf(stderr, "Output write failed: %s\n", strerror(errno));
+            result = EXIT_FAILURE;
             break;
         }
-        printf("Button press -> outputs %s\n", outputs_high ? "HIGH" : "LOW");
+        printf("BTN_5 press -> outputs %s\n", outputs_high ? "HIGH" : "LOW");
         fflush(stdout);
     }
 
-    set_value(out1_fd, 0);
-    set_value(out2_fd, 0);
-    close(out2_fd);
-    close(out1_fd);
-    close(button_fd);
-    close(out2_chip_fd);
-    close(out1_chip_fd);
-    close(button_chip_fd);
-    return 0;
+cleanup:
+    if (out1_fd >= 0) set_output(out1_fd, 0);
+    if (out2_fd >= 0) set_output(out2_fd, 0);
+    if (out2_fd >= 0) close(out2_fd);
+    if (out1_fd >= 0) close(out1_fd);
+    if (input_fd >= 0) close(input_fd);
+    return result;
 }
