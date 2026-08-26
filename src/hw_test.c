@@ -26,7 +26,7 @@ struct options {
     const char *out2;
     unsigned key_code;
     unsigned debounce_ms;
-    bool toggle;
+    unsigned long_press_ms;
 };
 
 static void stop_handler(int signo) { (void)signo; running = 0; }
@@ -38,8 +38,8 @@ static void usage(const char *name)
            "  --key-code N       Linux input key code (default: 0x105 = BTN_5)\n"
            "  --out1 PATH        first LED brightness path (default: %s)\n"
            "  --out2 PATH        second LED brightness path (default: %s)\n"
-           "  --toggle           toggle outputs on each press (default: latch high)\n"
            "  --debounce-ms N    press debounce time (default: 30)\n"
+           "  --long-press-ms N  hold time that switches outputs low (default: 3000)\n"
            "  -h, --help         show this help\n",
            name, DEFAULT_INPUT, DEFAULT_OUT1, DEFAULT_OUT2);
 }
@@ -86,10 +86,13 @@ int main(int argc, char **argv)
         .out2 = DEFAULT_OUT2,
         .key_code = BTN_5,
         .debounce_ms = 30,
+        .long_press_ms = 3000,
     };
     int input_fd = -1, out1_fd = -1, out2_fd = -1;
-    bool outputs_high = false;
-    uint64_t last_press_ms = 0;
+    bool key_down = false;
+    bool long_press_handled = false;
+    uint64_t press_started_ms = 0;
+    uint64_t last_event_ms = 0;
     int result = EXIT_FAILURE;
 
     for (int i = 1; i < argc; ++i) {
@@ -98,7 +101,7 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--out1") && i + 1 < argc) opt.out1 = argv[++i];
         else if (!strcmp(argv[i], "--out2") && i + 1 < argc) opt.out2 = argv[++i];
         else if (!strcmp(argv[i], "--debounce-ms") && i + 1 < argc) opt.debounce_ms = parse_u32(argv[++i], "debounce time");
-        else if (!strcmp(argv[i], "--toggle")) opt.toggle = true;
+        else if (!strcmp(argv[i], "--long-press-ms") && i + 1 < argc) opt.long_press_ms = parse_u32(argv[++i], "long press time");
         else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) { usage(argv[0]); return 0; }
         else { usage(argv[0]); return EXIT_FAILURE; }
     }
@@ -127,7 +130,19 @@ int main(int argc, char **argv)
     while (running) {
         struct pollfd pfd = { .fd = input_fd, .events = POLLIN };
         struct input_event event;
-        int ready = poll(&pfd, 1, 250);
+        if (key_down && !long_press_handled &&
+            monotonic_ms() - press_started_ms >= opt.long_press_ms) {
+            if (set_output(out1_fd, 0) < 0 || set_output(out2_fd, 0) < 0) {
+                fprintf(stderr, "Output write failed: %s\n", strerror(errno));
+                result = EXIT_FAILURE;
+                break;
+            }
+            long_press_handled = true;
+            printf("BTN_5 long press (%u ms) -> outputs LOW\n", opt.long_press_ms);
+            fflush(stdout);
+        }
+        int timeout_ms = key_down && !long_press_handled ? 50 : 250;
+        int ready = poll(&pfd, 1, timeout_ms);
         if (ready < 0) {
             if (errno == EINTR) continue;
             fprintf(stderr, "Input poll failed: %s\n", strerror(errno));
@@ -141,21 +156,33 @@ int main(int argc, char **argv)
             result = EXIT_FAILURE;
             break;
         }
-        if (event.type != EV_KEY || event.code != opt.key_code || event.value != 1)
+        if (event.type != EV_KEY || event.code != opt.key_code || event.value == 2)
             continue;
 
         uint64_t now_ms = monotonic_ms();
-        if (last_press_ms && now_ms - last_press_ms < opt.debounce_ms)
+        if (last_event_ms && now_ms - last_event_ms < opt.debounce_ms)
             continue;
-        last_press_ms = now_ms;
-        outputs_high = opt.toggle ? !outputs_high : true;
-        if (set_output(out1_fd, outputs_high) < 0 || set_output(out2_fd, outputs_high) < 0) {
-            fprintf(stderr, "Output write failed: %s\n", strerror(errno));
-            result = EXIT_FAILURE;
-            break;
+        last_event_ms = now_ms;
+
+        if (event.value == 1 && !key_down) {
+            key_down = true;
+            long_press_handled = false;
+            press_started_ms = now_ms;
+            continue;
         }
-        printf("BTN_5 press -> outputs %s\n", outputs_high ? "HIGH" : "LOW");
-        fflush(stdout);
+
+        if (event.value == 0 && key_down) {
+            key_down = false;
+            if (!long_press_handled) {
+                if (set_output(out1_fd, 1) < 0 || set_output(out2_fd, 1) < 0) {
+                    fprintf(stderr, "Output write failed: %s\n", strerror(errno));
+                    result = EXIT_FAILURE;
+                    break;
+                }
+                printf("BTN_5 short press -> outputs HIGH\n");
+                fflush(stdout);
+            }
+        }
     }
 
 cleanup:
