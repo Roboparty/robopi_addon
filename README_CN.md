@@ -119,7 +119,11 @@ locally administered 单播 MAC。Chip ID 不会直接作为 MAC 暴露。
 
 ```bash
 ETHERNET_INTERFACE=enP4p65s0
+ETHERNET_WAIT_SECONDS=60
 ```
+
+开机时工具最多等待上述秒数，直到 NetworkManager 在指定网卡上建立活动连接；
+如果 NetworkManager 仍未准备好，systemd 服务会在 5 秒后自动重试。
 
 首次重启前建议通过串口执行只读检查：
 

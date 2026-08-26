@@ -127,7 +127,12 @@ The default interface is configured in `/etc/default/robopi-ethernet-mac`:
 
 ```bash
 ETHERNET_INTERFACE=enP4p65s0
+ETHERNET_WAIT_SECONDS=60
 ```
+
+At boot, the tool waits up to this timeout for an active NetworkManager
+connection on the configured interface. The systemd service retries after five
+seconds if NetworkManager is still not ready.
 
 Run the read-only checks from a serial console before the first reboot:
 

@@ -1,2 +1,5 @@
 # Ethernet interface whose NetworkManager connection receives the stable MAC
 ETHERNET_INTERFACE=enP4p65s0
+
+# Maximum time to wait for NetworkManager to activate the interface at boot
+ETHERNET_WAIT_SECONDS=60

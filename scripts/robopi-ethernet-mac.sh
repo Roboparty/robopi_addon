@@ -4,6 +4,7 @@
 set -euo pipefail
 
 DEFAULT_INTERFACE="${ETHERNET_INTERFACE:-enP4p65s0}"
+CONNECTION_WAIT_SECONDS="${ETHERNET_WAIT_SECONDS:-60}"
 CPUINFO_FILE="${ROBOPI_CPUINFO_FILE:-/proc/cpuinfo}"
 
 usage() {
@@ -76,6 +77,29 @@ connection_uuid() {
     printf '%s' "$uuid"
 }
 
+wait_for_connection_uuid() {
+    local interface="$1"
+    local timeout="$2"
+    local elapsed=0
+    local uuid
+
+    [[ "$timeout" =~ ^[0-9]+$ ]] || die "invalid Ethernet wait timeout: $timeout"
+    printf 'Waiting up to %s seconds for an active NetworkManager connection on %s...\n' \
+        "$timeout" "$interface" >&2
+
+    while [ "$elapsed" -lt "$timeout" ]; do
+        uuid=$(nmcli -g GENERAL.CON-UUID device show "$interface" 2>/dev/null || true)
+        if [ -n "$uuid" ]; then
+            printf '%s' "$uuid"
+            return 0
+        fi
+        sleep 1
+        elapsed=$((elapsed + 1))
+    done
+
+    die "no active NetworkManager connection for $interface after ${timeout}s"
+}
+
 print_identity() {
     local chip_id="$1"
     local mac="$2"
@@ -122,7 +146,7 @@ apply_mac() {
     require_command ip
     require_command nmcli
     ip link show "$interface" >/dev/null 2>&1 || die "network interface not found: $interface"
-    uuid=$(connection_uuid "$interface")
+    uuid=$(wait_for_connection_uuid "$interface" "$CONNECTION_WAIT_SECONDS")
 
     printf '\nApplying %s to %s (connection %s).\n' "$mac" "$interface" "$uuid"
     nmcli connection modify uuid "$uuid" \
