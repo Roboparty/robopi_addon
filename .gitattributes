@@ -7,3 +7,4 @@
 *.ko  -text
 *.deb -text
 *.ddeb -text
+*.zip -text
