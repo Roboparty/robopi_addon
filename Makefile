@@ -6,7 +6,7 @@ TARGET_KERNEL_RELEASE ?= 6.1.99-rt36-rockchip-rk3588
 KDIR ?= /lib/modules/$(TARGET_KERNEL_RELEASE)/build
 PREBUILT_MODULE ?= prebuilt/$(TARGET_KERNEL_RELEASE)/robopi-ws2812.ko
 
-.PHONY: all clean install package kernel check-prebuilt-module
+.PHONY: all clean install package kernel check-prebuilt-module check-prebuilt-wifi
 
 all: build/robopi-ws2812 build/robopi-sig-key build/robopi-hw-test
 
@@ -32,7 +32,21 @@ check-prebuilt-module:
 		exit 1; \
 	}
 
-install: all check-prebuilt-module
+check-prebuilt-wifi:
+	sh scripts/check-prebuilt-wifi.sh $(TARGET_KERNEL_RELEASE)
+
+install: all check-prebuilt-module check-prebuilt-wifi
+	install -d $(DESTDIR)/lib/modules/$(TARGET_KERNEL_RELEASE)/kernel/drivers/net/wireless/aic8800
+	install -m 0644 prebuilt/$(TARGET_KERNEL_RELEASE)/aic_load_fw.ko prebuilt/$(TARGET_KERNEL_RELEASE)/aic8800_fdrv.ko $(DESTDIR)/lib/modules/$(TARGET_KERNEL_RELEASE)/kernel/drivers/net/wireless/aic8800/
+	mkdir -p build/aic-vendor
+	unzip -oq prebuilt/UGREEN_AIC-AX300_LinuxDriver_V1.6.zip 'aic8800_linux_drvier/fw/*' -d build/aic-vendor
+	install -d $(DESTDIR)/lib/firmware/aic8800DC
+	install -m 0644 build/aic-vendor/aic8800_linux_drvier/fw/aic8800DC/* $(DESTDIR)/lib/firmware/aic8800DC/
+	install -D -m 0644 etc/udev/rules.d/aic.rules $(DESTDIR)/etc/udev/rules.d/aic.rules
+	install -D -m 0755 scripts/robopi-usb-wifi-init.sh $(DESTDIR)/opt/roboparty/bin/robopi-usb-wifi-init
+	install -D -m 0644 etc/systemd/system/robopi-usb-wifi.service $(DESTDIR)/lib/systemd/system/robopi-usb-wifi.service
+	install -D -m 0644 docs/usb-wifi-bundle.md $(DESTDIR)/usr/share/doc/robopi-addon/usb-wifi-bundle.md
+	install -D -m 0644 prebuilt/UGREEN_AIC-AX300_LinuxDriver_V1.6.zip $(DESTDIR)/usr/share/doc/robopi-addon/vendor/UGREEN_AIC-AX300_LinuxDriver_V1.6.zip
 	install -D -m 0644 docs/wifi-selection.md $(DESTDIR)/usr/share/doc/robopi-addon/wifi-selection.md
 	install -D -m 0755 scripts/robopi-wifi-select.sh $(DESTDIR)/opt/roboparty/bin/robopi-wifi-select
 	install -D -m 0755 build/robopi-ws2812 $(DESTDIR)/opt/roboparty/bin/robopi-ws2812

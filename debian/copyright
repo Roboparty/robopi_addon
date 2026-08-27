@@ -1,7 +1,21 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Source: https://github.com/Roboparty/robopi_addon
 
-Files: *
+Files: prebuilt/UGREEN_AIC-AX300_LinuxDriver_V1.6.zip
+Copyright: Original vendor and upstream authors; see files in the archive
+License: vendor-original-terms
+ This archive is preserved as provided by the user. It contains driver source,
+ binary firmware and vendor documentation. It is not relicensed under the
+ project's GPL-3.0-only license. Firmware redistribution permission has not
+ been established; confirm vendor permission before public distribution.
+
+Files: prebuilt/*/aic_load_fw.ko prebuilt/*/aic8800_fdrv.ko
+Copyright: AIC Semiconductor and upstream authors; see corresponding source archive
+License: GPL
+ The modules declare MODULE_LICENSE("GPL"). Corresponding unmodified vendor
+ source is retained in UGREEN_AIC-AX300_LinuxDriver_V1.6.zip.
+
+Files: src/* scripts/* etc/* docs/* debian/* Makefile README* LICENSE .github/* tests/* patches/*
 Copyright: 2025-2026 fanxiaobinggit <16692712013@163.com>
 License: GPL-3.0-only
  This program is free software: you can redistribute it and/or modify

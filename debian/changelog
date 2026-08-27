@@ -1,3 +1,12 @@
+robopi-addon (1.6.18-1) stable; urgency=medium
+
+  * Bundle ARM64 AIC8800 modules for 6.1.99-rt36-rockchip-rk3588,
+    vendor firmware and USB storage-mode switching rules.
+  * Prepare USB Wi-Fi at installation and boot without changing connections.
+  * Validate prebuilt checksums, kernel release and architecture during builds.
+
+ -- fanxiaobinggit <16692712013@163.com>  Thu, 27 Aug 2026 18:00:00 +0800
+
 robopi-addon (1.6.17-1) stable; urgency=medium
 
   * Add persistent USB/onboard Wi-Fi selection without removing drivers.

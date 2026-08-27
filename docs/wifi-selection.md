@@ -40,9 +40,9 @@ iw dev wlx6c1ff7e149c0 info
 
 ## 前提与验收
 
-本功能不下载、编译 AIC 驱动，不自动安装厂商固件或 udev 规则。
-需要先确保 USB 网卡从存储模式切换完成，已绑定 aic8800_fdrv，并出现在 iw dev。
-软件包增加 eject 与 iw 依赖；已有厂商 aic.rules 可调用 eject 完成模式切换。
+从 1.6.18 起，软件包内置当前目标内核的 AIC8800 驱动、固件和 udev 规则，
+无需手动编译安装。详情及内核限制见 [USB 驱动说明](usb-wifi-bundle.md)。
+选择网卡前仍需确认 USB 已绑定 aic8800_fdrv，并出现在 iw dev。
 
 ```bash
 lsusb -t

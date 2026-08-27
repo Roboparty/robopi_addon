@@ -1,0 +1,14 @@
+[Unit]
+Description=Prepare bundled RoboPi AIC USB Wi-Fi driver
+After=systemd-udevd.service systemd-modules-load.service
+Before=wifi-reset.service
+ConditionPathExists=/lib/modules/6.1.99-rt36-rockchip-rk3588/kernel/drivers/net/wireless/aic8800/aic8800_fdrv.ko
+
+[Service]
+Type=oneshot
+ExecStart=/opt/roboparty/bin/robopi-usb-wifi-init
+RemainAfterExit=yes
+TimeoutStartSec=30
+
+[Install]
+WantedBy=multi-user.target

@@ -35,6 +35,7 @@ if [ "$1" = configure ]; then
     depmod -a "$TARGET_KERNEL_RELEASE"
 
     systemctl daemon-reload 2>/dev/null || true
+    systemctl enable robopi-usb-wifi.service 2>/dev/null || true
     systemctl enable wifi-reset.service 2>/dev/null || true
     systemctl enable hpm-reset.service 2>/dev/null || true
     systemctl enable robopi-ethernet-mac.service 2>/dev/null || true
@@ -43,6 +44,9 @@ if [ "$1" = configure ]; then
     systemctl enable robopi-ws2812-white.service 2>/dev/null || true
 
     if ! is_chroot; then
+        # Do not fail the entire addon installation if USB hardware initialization
+        # fails; keep the service failure and logs available for diagnosis.
+        systemctl restart robopi-usb-wifi.service || echo "robopi-addon: USB Wi-Fi initialization failed; inspect journalctl -u robopi-usb-wifi" >&2
         running_kernel=$(uname -r)
         if [ "$running_kernel" = "$TARGET_KERNEL_RELEASE" ]; then
             modprobe "$MODULE_NAME"
