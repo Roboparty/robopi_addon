@@ -14,6 +14,9 @@ be enabled by the system.
 
 ## What's included
 
+- Persistent USB/onboard Wi-Fi selection: `sudo robopi-wifi-select usb`;
+  see [usage and recovery](docs/wifi-selection.md).
+
 - `robopi-ws2812` command-line controller
 - `robopi-ws2812` kernel transmitter and `/dev/robopi-ws2812`
 - Solid color, flash, chase, rainbow, and demo effects

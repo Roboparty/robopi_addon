@@ -13,6 +13,8 @@ RoboPi RK3588S 平台的附加工具包，包含 WS2812 灯带控制和 SIG/按�
 
 ## 包含内容
 
+- [USB / 板载 Wi-Fi 切换说明](docs/wifi-selection.md)：`sudo robopi-wifi-select usb`
+
 - `robopi-ws2812` 命令行控制程序
 - 常亮、闪烁、流水灯、彩虹和综合演示效果
 - `robopi-sig-key` SIG/按键 GPIO 辅助程序

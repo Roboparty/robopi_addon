@@ -7,5 +7,6 @@ CHECK_INTERVAL=30
 # Number of consecutive failures before reporting error
 FAIL_THRESHOLD=3
 
-# WiFi interface name (set to empty for auto-detection)
+# Legacy default. robopi-wifi-select persists an override in
+# /etc/roboparty/wifi-interface. No fallback to another adapter on removal.
 WIFI_INTERFACE=wlan0
