@@ -1,3 +1,24 @@
+robopi-addon (1.6.23-1) stable; urgency=medium
+
+  * Use io_state 0x00100000 as the only battery-off state for B0.
+  * Start B0 high and preserve it on zero/unknown states; C2 unchanged.
+
+ -- fanxiaobinggit <16692712013@163.com>  Fri, 28 Aug 2026 19:00:00 +0800
+
+robopi-addon (1.6.22-1) stable; urgency=medium
+
+  * Set GPIO1_B0 high for io_state 0x0010000A or 0x0010000F and low for zero.
+  * Preserve B0 for other states; keep C2 and socket-disconnect behavior.
+
+ -- fanxiaobinggit <16692712013@163.com>  Fri, 28 Aug 2026 18:30:00 +0800
+
+robopi-addon (1.6.21-1) stable; urgency=medium
+
+  * Control dual-battery GPIOs using the 126-byte TWS BMS socket ABI.
+  * Replace SIG output services; use explicit disconnect, not stale-data timeout.
+
+ -- fanxiaobinggit <16692712013@163.com>  Fri, 28 Aug 2026 18:00:00 +0800
+
 robopi-addon (1.6.20-1) stable; urgency=medium
 
   * Reserve wlan1 for USB Wi-Fi before predictable interface naming.

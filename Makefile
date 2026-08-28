@@ -36,6 +36,9 @@ check-prebuilt-wifi:
 	sh scripts/check-prebuilt-wifi.sh $(TARGET_KERNEL_RELEASE)
 
 install: all check-prebuilt-module check-prebuilt-wifi
+	install -D -m 0755 scripts/robopi-bms-gpio.py $(DESTDIR)/opt/roboparty/bin/robopi-bms-gpio
+	install -D -m 0644 etc/systemd/system/robopi-bms-gpio.service $(DESTDIR)/lib/systemd/system/robopi-bms-gpio.service
+	install -D -m 0644 docs/bms-gpio.md $(DESTDIR)/usr/share/doc/robopi-addon/bms-gpio.md
 	install -D -m 0644 etc/udev/rules.d/70-robopi-usb-wifi-name.rules $(DESTDIR)/etc/udev/rules.d/70-robopi-usb-wifi-name.rules
 	install -D -m 0644 etc/udev/rules.d/90-robopi-usb-wifi-select.rules $(DESTDIR)/etc/udev/rules.d/90-robopi-usb-wifi-select.rules
 	install -D -m 0644 etc/systemd/system/robopi-wifi-autoselect.service $(DESTDIR)/lib/systemd/system/robopi-wifi-autoselect.service

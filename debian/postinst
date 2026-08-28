@@ -40,11 +40,15 @@ if [ "$1" = configure ]; then
     systemctl enable wifi-reset.service 2>/dev/null || true
     systemctl enable hpm-reset.service 2>/dev/null || true
     systemctl enable robopi-ethernet-mac.service 2>/dev/null || true
-    systemctl enable robopi-hw-test.service 2>/dev/null || true
+    systemctl disable robopi-hw-test.service robopi-sig-key.service 2>/dev/null || true
+    systemctl enable robopi-bms-gpio.service 2>/dev/null || true
     systemctl enable robopi-fan.service 2>/dev/null || true
     systemctl enable robopi-ws2812-white.service 2>/dev/null || true
 
     if ! is_chroot; then
+        # Persist package files and enable/disable links before GPIO transitions.
+        # The target image uses ext4 commit=600; battery removal can lose cached writes.
+        sync
         # Do not fail the entire addon installation if USB hardware initialization
         # fails; keep the service failure and logs available for diagnosis.
         systemctl restart robopi-usb-wifi.service || echo "robopi-addon: USB Wi-Fi initialization failed; inspect journalctl -u robopi-usb-wifi" >&2
@@ -63,7 +67,8 @@ if [ "$1" = configure ]; then
 
         systemctl start wifi-reset.service 2>/dev/null || true
         systemctl start hpm-reset.service 2>/dev/null || true
-        systemctl start robopi-hw-test.service 2>/dev/null || true
+        systemctl stop robopi-hw-test.service robopi-sig-key.service
+        systemctl restart robopi-bms-gpio.service || echo "robopi-addon: BMS GPIO service failed; check journalctl -u robopi-bms-gpio" >&2
         systemctl restart robopi-fan.service 2>/dev/null || true
         systemctl restart robopi-ws2812-white.service 2>/dev/null || true
     fi

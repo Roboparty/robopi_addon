@@ -1,0 +1,18 @@
+[Unit]
+Description=RoboPi battery GPIO control from TWS Unix socket
+Wants=bms.service
+After=bms.service robopi-hw-test.service robopi-sig-key.service
+Conflicts=robopi-hw-test.service robopi-sig-key.service
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/roboparty/bin/robopi-bms-gpio
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target
