@@ -1,3 +1,11 @@
+robopi-addon (1.6.19-1) stable; urgency=medium
+
+  * Automatically select USB Wi-Fi at boot, install and hotplug via udev/systemd.
+  * Preserve manual onboard selection, active APs and existing USB selection.
+  * Serialize selection and wait for NetworkManager device discovery.
+
+ -- fanxiaobinggit <16692712013@163.com>  Fri, 28 Aug 2026 15:00:00 +0800
+
 robopi-addon (1.6.18-1) stable; urgency=medium
 
   * Bundle ARM64 AIC8800 modules for 6.1.99-rt36-rockchip-rk3588,

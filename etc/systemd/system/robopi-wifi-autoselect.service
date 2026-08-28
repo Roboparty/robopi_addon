@@ -1,0 +1,18 @@
+[Unit]
+Description=Automatically select RoboPi USB Wi-Fi
+Wants=NetworkManager.service
+After=NetworkManager.service robopi-usb-wifi.service
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+[Service]
+Type=oneshot
+ExecStart=/opt/roboparty/bin/robopi-wifi-select auto-usb
+TimeoutStartSec=90
+Restart=on-failure
+RestartSec=3
+# Stay inactive after success so a new USB device can trigger another scan.
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target

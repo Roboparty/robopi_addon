@@ -1,0 +1,2 @@
+# NetworkManager calls run in systemd, not in the short-lived udev worker.
+ACTION=="add", SUBSYSTEM=="net", SUBSYSTEMS=="usb", TEST=="wireless", TAG+="systemd", ENV{SYSTEMD_WANTS}+="robopi-wifi-autoselect.service"

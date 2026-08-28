@@ -1,5 +1,32 @@
 # USB / 板载 Wi-Fi 切换
 
+## 1.6.19 起：USB 自动选择
+
+默认启用 USB 优先：安装软件包、开机及 USB 无线接口出现时自动扫描。
+udev 仅匹配 USB 无线接口，通过 SYSTEMD_WANTS 启动
+`robopi-wifi-autoselect.service`；不会匹配 USB 有线网卡或 CAN 设备。
+服务等待 NetworkManager 发现接口后保存新接口名，停用其他无线接口并更新重连监控。
+更换不同 MAC 的 USB 网卡无需再指定旧接口名。
+
+安装/插入 USB 网卡会断开板载 Wi-Fi，请用有线 SSH 或串口操作。
+无 USB 时不修改配置；多个 USB 时保留仍在场的已选网卡，否则不自动猜选。
+拔掉已选 USB 不自动恢复板载无线。其他接口已运行 AP 时跳过自动切换，
+需要手动选择或关闭 AP 后再运行 auto。
+
+```bash
+# 恢复自动 USB 优先并立即扫描
+sudo robopi-wifi-select auto
+# 选择板载，同时持久暂停 USB 自动切换
+sudo robopi-wifi-select onboard wlan0
+robopi-wifi-select status
+journalctl -b -u robopi-wifi-autoselect.service --no-pager
+```
+
+自动切换不等于自动知道 Wi-Fi 密码：首次连接仍需 nmcli --ask。
+旧连接若绑定了旧接口名/MAC，不会强行改写，新网卡可能仍需连接一次。
+已选接口的连接/AP 保留。一次性服务成功后 inactive (dead) 正常，
+请结合日志和 nmcli device status 验证。
+
 安装新版 robopi-addon 后，通过有线 SSH 或串口执行。切换会断开非选中无线
 接口，不能依赖正在被停用的 Wi-Fi SSH 会话。
 
@@ -22,7 +49,7 @@ sudo robopi-wifi-select onboard wlan0
 `/etc/NetworkManager/conf.d/90-robopi-wifi-select.conf`。
 其他无线接口设置为 unmanaged，不卸载驱动、不改设备树、不禁用蓝牙，也不影响
 有线网络。拔掉选中的 USB 网卡后会等待其重新插入，不会偷偷切回板载无线。
-更换不同 MAC 的 USB 网卡或接口名称变化后，需要再次执行选择命令。
+1.6.19 自动模式会识别更换后的 USB 网卡；手动模式需再次选择或恢复 auto。
 
 保留所有原连接配置及密码；脚本不复制写 Wi-Fi 密码。原来绑定 wlan0 的配置
 不会被自动改绑，可用上面的 nmcli 命令为 USB 接口建立连接。
