@@ -1,0 +1,6 @@
+# Run before 80-net-setup-link.rules. Final NAME prevents predictable wlx renaming.
+# Only USB wireless netdevs; never rename onboard Wi-Fi, Ethernet or CAN.
+ACTION=="add", SUBSYSTEM=="net", SUBSYSTEMS=="usb", TEST=="wireless", KERNEL=="wlan1", NAME:="wlan1"
+# Single-USB setup: use the reserved name only when it is not already occupied.
+# Multiple simultaneous adapters are not guaranteed a particular name/order.
+ACTION=="add", SUBSYSTEM=="net", SUBSYSTEMS=="usb", TEST=="wireless", KERNEL!="wlan1", TEST!="/sys/class/net/wlan1", NAME:="wlan1"

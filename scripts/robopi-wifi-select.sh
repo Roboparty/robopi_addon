@@ -25,6 +25,8 @@ exec 9>/run/roboparty/wifi-select.lock
 flock -w 40 9 || die 'Another selection is still running.'
 if [[ $action == auto-usb && -e $disabled ]]; then echo 'USB auto selection disabled by user.'; exit 0; fi
 if [[ $action == auto ]]; then rm -f "$disabled"; fi
+# Boot scanning must not race the udev NAME assignment. Never rename a live link.
+udevadm settle --timeout=15 || die 'udev is still processing devices; retry selection.'
 iface=${2:-}
 if [[ -z $iface ]]; then
     candidates=()
@@ -94,6 +96,25 @@ systemctl stop wifi-reset.service
 trap 'rm -f "$tmp"; systemctl start wifi-reset.service || true' EXIT
 nmcli general reload
 nmcli device set "$iface" managed yes
+# Preserve saved credentials when this same adapter changes from wlx<MAC> to wlan1.
+# Do not migrate profiles for a different adapter or profiles bound to wlan0.
+if [[ $mode == usb && $iface == wlan1 ]]; then
+    mac=$(cat "/sys/class/net/$iface/address")
+    if [[ $mac =~ ^([[:xdigit:]]{2}:){5}[[:xdigit:]]{2}$ ]]; then
+        old_iface="wlx${mac//:/}"
+        profiles=$(nmcli -g UUID connection show)
+        while IFS= read -r uuid; do
+            [[ -n $uuid ]] || continue
+            type=$(nmcli -g connection.type connection show uuid "$uuid")
+            [[ $type == 802-11-wireless ]] || continue
+            bound=$(nmcli -g connection.interface-name connection show uuid "$uuid")
+            [[ ${bound,,} == ${old_iface,,} ]] || continue
+            # Interface names are unambiguous here; keep all MAC/security/AP settings.
+            nmcli connection modify uuid "$uuid" connection.interface-name "$iface"
+            echo "Migrated Wi-Fi profile $uuid: $bound -> $iface"
+        done <<< "$profiles"
+    fi
+fi
 for path in /sys/class/net/*; do
     name=${path##*/}
     wireless "$name" || continue

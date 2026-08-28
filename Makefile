@@ -36,6 +36,7 @@ check-prebuilt-wifi:
 	sh scripts/check-prebuilt-wifi.sh $(TARGET_KERNEL_RELEASE)
 
 install: all check-prebuilt-module check-prebuilt-wifi
+	install -D -m 0644 etc/udev/rules.d/70-robopi-usb-wifi-name.rules $(DESTDIR)/etc/udev/rules.d/70-robopi-usb-wifi-name.rules
 	install -D -m 0644 etc/udev/rules.d/90-robopi-usb-wifi-select.rules $(DESTDIR)/etc/udev/rules.d/90-robopi-usb-wifi-select.rules
 	install -D -m 0644 etc/systemd/system/robopi-wifi-autoselect.service $(DESTDIR)/lib/systemd/system/robopi-wifi-autoselect.service
 	install -d $(DESTDIR)/lib/modules/$(TARGET_KERNEL_RELEASE)/kernel/drivers/net/wireless/aic8800

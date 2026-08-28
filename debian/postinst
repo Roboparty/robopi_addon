@@ -49,6 +49,7 @@ if [ "$1" = configure ]; then
         # fails; keep the service failure and logs available for diagnosis.
         systemctl restart robopi-usb-wifi.service || echo "robopi-addon: USB Wi-Fi initialization failed; inspect journalctl -u robopi-usb-wifi" >&2
         udevadm control --reload-rules || true
+        echo "robopi-addon: USB Wi-Fi naming rule installed; reboot or replug USB Wi-Fi to apply wlan1."
         # Also scan already plugged-in adapters; reloading udev rules alone does
         # not activate SYSTEMD_WANTS on a device that is already active.
         systemctl restart --no-block robopi-wifi-autoselect.service || true

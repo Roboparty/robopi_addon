@@ -1,5 +1,31 @@
 # USB / 板载 Wi-Fi 切换
 
+## 1.6.20 起：USB 网卡固定为 wlan1
+
+单张 USB 无线网卡使用 `wlan1`，板载无线不改名。包内的
+`70-robopi-usb-wifi-name.rules` 在默认命名规则之前设置最终名称，
+避免 `wlan1` 再变为 `wlx<MAC>`。自动选择先等待 udev 完成。
+
+升级不会对正在使用的接口强制改名。安装后通过有线/串口重启板子，
+或重新插拔 USB 网卡（无线连接会中断），然后检查：
+
+```bash
+iw dev
+robopi-wifi-select status
+sudo nmcli device wifi list ifname wlan1 --rescan yes
+# 首次配置网络时执行；已有可用的自动连接配置无需重复输入密码
+sudo nmcli --ask device wifi connect RoboParty ifname wlan1
+```
+
+自动选择启用时，选中 wlan1 后，仅将绑定同一网卡 `wlx<当前MAC>` 名称的
+Wi-Fi 配置改绑到 wlan1，保留密码、MAC 限制、AP 模式及自动连接设置。
+不会迁移其他网卡或 wlan0 的配置，也不会开启原本关闭的自动连接。
+手动暂停自动选择的用户可运行 `sudo robopi-wifi-select auto` 恢复。
+
+该名称方案针对单张 USB 网卡。如果 wlan1 已被其他接口占用，不抢占它；
+多张 USB 同时插入时不保证哪张取得 wlan1，请勿依赖插入顺序区分网卡。
+升级后须在目标板验证冷启动、拔插、已存 Wi-Fi 重连及 AP 场景。
+
 ## 1.6.19 起：USB 自动选择
 
 默认启用 USB 优先：安装软件包、开机及 USB 无线接口出现时自动扫描。
@@ -23,7 +49,7 @@ journalctl -b -u robopi-wifi-autoselect.service --no-pager
 ```
 
 自动切换不等于自动知道 Wi-Fi 密码：首次连接仍需 nmcli --ask。
-旧连接若绑定了旧接口名/MAC，不会强行改写，新网卡可能仍需连接一次。
+新网卡若与旧连接的 MAC 限制不符，可能仍需连接一次；同卡改名迁移见上文。
 已选接口的连接/AP 保留。一次性服务成功后 inactive (dead) 正常，
 请结合日志和 nmcli device status 验证。
 
@@ -34,11 +60,11 @@ journalctl -b -u robopi-wifi-autoselect.service --no-pager
 # 自动选择唯一的 USB 无线网卡；存在多张时要求显式指定
 sudo robopi-wifi-select usb
 # 本次测试网卡也可直接指定
-sudo robopi-wifi-select usb wlx6c1ff7e149c0
+sudo robopi-wifi-select usb wlan1
 robopi-wifi-select status
 
 # 连接已扫描到的热点（交互输入密码）
-sudo nmcli --ask device wifi connect RoboParty ifname wlx6c1ff7e149c0
+sudo nmcli --ask device wifi connect RoboParty ifname wlan1
 
 # 恢复板载 Wi-Fi；USB Wi-Fi 将停用
 sudo robopi-wifi-select onboard wlan0
@@ -61,8 +87,8 @@ sudo robopi-wifi-select onboard wlan0
 如需热点开机启动，单独配置其 autoconnect 并验证，不能认为切换网卡等于开启热点。
 
 ```bash
-sudo nmcli device wifi hotspot ifname wlx6c1ff7e149c0 con-name RoboPi-AP ssid RoboPi-AP band bg
-iw dev wlx6c1ff7e149c0 info
+sudo nmcli device wifi hotspot ifname wlan1 con-name RoboPi-AP ssid RoboPi-AP band bg
+iw dev wlan1 info
 ```
 
 ## 前提与验收
@@ -77,8 +103,8 @@ iw dev
 nmcli device status
 systemctl status wifi-reset.service --no-pager
 journalctl -u wifi-reset.service -n 30 --no-pager
-ip -4 address show dev wlx6c1ff7e149c0
-ping -I wlx6c1ff7e149c0 -c 5 10.42.0.1
+ip -4 address show dev wlan1
+ping -I wlan1 -c 5 10.42.0.1
 ```
 
 最后一条仅为接口绑定测试示例：客户端模式应换改为实际网关地址；AP 模式请从
