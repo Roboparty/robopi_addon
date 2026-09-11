@@ -17,6 +17,7 @@
 | 控制 WS2812 灯带 | `sudo robopi-ws2812 --help` |
 | 控制风扇 | `sudo robopi-fan on\|off\|status` |
 | 检查以太网 MAC | `robopi-ethernet-mac check` |
+| 查看有线静态上联 | `robopi-ethernet-static status` / [有线静态上联说明](docs/ethernet-static.md) |
 | 查看 GPIO0_C2 驱动配置 | `sudo robopi-gpio0-c2-drive status` |
 | 查看 BMS GPIO 行为 | [BMS GPIO 说明](docs/bms-gpio.md) |
 | USB-CAN 故障抓包 | `sudo usbcan-debug-snapshot` / [抓包说明](docs/usbcan-dump.md) |
@@ -32,6 +33,7 @@
 | `robopi-usb-wifi.service` | 启用 | 初始化 AIC8800 USB Wi-Fi |
 | `robopi-wifi-autoselect.service` | 启用 | 开机选择 USB 或板载 Wi-Fi |
 | `wifi-reset.service` | 启用 | 监测并重连当前选中的 Wi-Fi，不切换备用网卡 |
+| `robopi-ethernet-static.service` | 启用 | 配置板子直连 Windows 的有线静态上联（地址、默认路由、DNS） |
 | `robopi-bms-gpio.service` | 启用 | 根据 BMS 状态控制双电池 GPIO 指示灯 |
 | `robopi-fan.service` | 启用 | 开机打开 FAN_SW |
 | `robopi-ws2812-white.service` | 启用 | 开机执行 `solid 30 30 30`，停止时熄灯 |
@@ -164,6 +166,22 @@ analyze-ethercan-pcap /var/log/robopi/usbcan/<快照目录>
 
 配置、依赖、抓包过滤器和资源开销见 [USB-CAN 抓包说明](docs/usbcan-dump.md)。
 
+## 有线静态上联
+
+`robopi-ethernet-static.service` 把板载网口配置为直连 Windows 主机的静态上联：
+板子使用固定地址，互联网流量经 Windows 网关转发。该网口对 NetworkManager 为
+unmanaged，NM 不会在其上运行 DHCP。参数集中在
+`/etc/default/robopi-ethernet-static`：
+
+```bash
+robopi-ethernet-static status
+sudo robopi-ethernet-static check
+sudo systemctl restart robopi-ethernet-static.service
+```
+
+拓扑、DNS 降级策略及与 `robopi-ethernet-mac.service` 的互斥关系见
+[有线静态上联说明](docs/ethernet-static.md)。
+
 ## 稳定以太网 MAC
 
 `robopi-ethernet-mac` 从 `/proc/cpuinfo` 的 RK3588 `Serial` 派生稳定的、本地管理的
@@ -272,6 +290,7 @@ TARGET_KERNEL_RELEASE=6.18.50-current-rockchip64 \
 bash tests/usb-wifi-init-test.sh
 bash tests/wifi-autoselect-test.sh
 bash tests/wifi-reconnect-test.sh
+bash tests/ethernet-static-test.sh
 python3 tests/bms-gpio-test.py
 bash tests/usbcan-capture-test.sh
 bash tests/usbcan-snapshot-test.sh

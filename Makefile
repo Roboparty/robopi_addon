@@ -104,6 +104,18 @@ install: all check-prebuilt-module check-prebuilt-wifi
 	ln -sf /opt/roboparty/bin/robopi-fan $(DESTDIR)/usr/bin/robopi-fan
 	ln -sf /opt/roboparty/bin/robopi-gpio0-c2-drive $(DESTDIR)/usr/bin/robopi-gpio0-c2-drive
 
+	# Static Ethernet uplink to the Windows host; the conf.d drop-in keeps
+	# NetworkManager from running DHCP on the interface.
+	install -D -m 0755 scripts/robopi-ethernet-static.sh \
+		$(DESTDIR)/opt/roboparty/bin/robopi-ethernet-static
+	install -D -m 0644 etc/systemd/system/robopi-ethernet-static.service \
+		$(DESTDIR)/lib/systemd/system/robopi-ethernet-static.service
+	install -D -m 0644 etc/NetworkManager/conf.d/80-robopi-ethernet-static.conf \
+		$(DESTDIR)/etc/NetworkManager/conf.d/80-robopi-ethernet-static.conf
+	install -D -m 0644 docs/ethernet-static.md \
+		$(DESTDIR)/usr/share/doc/robopi-addon/ethernet-static.md
+	ln -sf /opt/roboparty/bin/robopi-ethernet-static $(DESTDIR)/usr/bin/robopi-ethernet-static
+
 	# SIG diagnostic service, then WS2812 autoload configuration and kernel module.
 	install -D -m 0644 etc/systemd/system/robopi-sig-key.service \
 		$(DESTDIR)/lib/systemd/system/robopi-sig-key.service
@@ -149,6 +161,8 @@ install: all check-prebuilt-module check-prebuilt-wifi
 		$(DESTDIR)/etc/default/wifi-reset
 	install -D -m 0644 etc/default/robopi-ethernet-mac \
 		$(DESTDIR)/etc/default/robopi-ethernet-mac
+	install -D -m 0644 etc/default/robopi-ethernet-static \
+		$(DESTDIR)/etc/default/robopi-ethernet-static
 
 	# Optional source patch for systems that need maximum GPIO0_C2 drive strength.
 	install -D -m 0644 patches/0001-rk3588s-robopi2-gpio0-c2-max-drive.patch \

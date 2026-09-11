@@ -21,6 +21,7 @@ interrupt the current SSH session.
 | Control the WS2812 strip | `sudo robopi-ws2812 --help` |
 | Control the fan | `sudo robopi-fan on\|off\|status` |
 | Check the Ethernet MAC | `robopi-ethernet-mac check` |
+| Inspect the static Ethernet uplink | `robopi-ethernet-static status` / [Ethernet uplink](docs/ethernet-static.md) |
 | Inspect GPIO0_C2 drive strength | `sudo robopi-gpio0-c2-drive status` |
 | Review BMS GPIO behavior | [BMS GPIO](docs/bms-gpio.md) |
 | Capture a USB-CAN fault snapshot | `sudo usbcan-debug-snapshot` / [capture guide](docs/usbcan-dump.md) |
@@ -36,6 +37,7 @@ The package maintainer scripts apply the following default policy:
 | `robopi-usb-wifi.service` | Enabled | Initialize AIC8800 USB Wi-Fi |
 | `robopi-wifi-autoselect.service` | Enabled | Select USB or onboard Wi-Fi at boot |
 | `wifi-reset.service` | Enabled | Monitor and reconnect the selected Wi-Fi interface without switching adapters |
+| `robopi-ethernet-static.service` | Enabled | Apply the static board-to-Windows Ethernet uplink (address, default route, DNS) |
 | `robopi-bms-gpio.service` | Enabled | Drive the dual-battery GPIO indicators from BMS state |
 | `robopi-fan.service` | Enabled | Turn on FAN_SW at boot |
 | `robopi-ws2812-white.service` | Enabled | Run `solid 30 30 30` at boot and turn the strip off when stopped |
@@ -187,6 +189,24 @@ analyze-ethercan-pcap /var/log/robopi/usbcan/<snapshot-directory>
 See [USB-CAN capture](docs/usbcan-dump.md) for configuration, dependencies,
 capture filters, and resource costs.
 
+## Static Ethernet uplink
+
+`robopi-ethernet-static.service` configures the onboard Ethernet port as a
+static uplink to a directly cabled Windows host: the board takes a fixed
+address and its internet traffic exits through the Windows gateway. The
+interface is unmanaged for NetworkManager, so NM never runs DHCP on it.
+Settings live in `/etc/default/robopi-ethernet-static`:
+
+```bash
+robopi-ethernet-static status
+sudo robopi-ethernet-static check
+sudo systemctl restart robopi-ethernet-static.service
+```
+
+Topology, the DNS fallback, and the mutual exclusion with
+`robopi-ethernet-mac.service` are covered in
+[Static Ethernet uplink](docs/ethernet-static.md).
+
 ## Stable Ethernet MAC
 
 `robopi-ethernet-mac` derives a stable, locally administered unicast MAC from
@@ -301,6 +321,7 @@ Regression tests that do not access hardware:
 bash tests/usb-wifi-init-test.sh
 bash tests/wifi-autoselect-test.sh
 bash tests/wifi-reconnect-test.sh
+bash tests/ethernet-static-test.sh
 python3 tests/bms-gpio-test.py
 bash tests/usbcan-capture-test.sh
 bash tests/usbcan-snapshot-test.sh

@@ -37,6 +37,7 @@ if [ "$1" = configure ]; then
     systemctl daemon-reload 2>/dev/null || true
     systemctl enable robopi-usb-wifi.service 2>/dev/null || true
     systemctl enable robopi-wifi-autoselect.service 2>/dev/null || true
+    systemctl enable robopi-ethernet-static.service 2>/dev/null || true
     systemctl enable wifi-reset.service 2>/dev/null || true
     systemctl enable hpm-reset.service 2>/dev/null || true
     systemctl disable robopi-ethernet-mac.service 2>/dev/null || true
@@ -57,6 +58,9 @@ if [ "$1" = configure ]; then
         # Also scan already plugged-in adapters; reloading udev rules alone does
         # not activate SYSTEMD_WANTS on a device that is already active.
         systemctl restart --no-block robopi-wifi-autoselect.service || true
+        # Ethernet uplink to the Windows host; safe to run without the cable
+        # attached (the configuration applies once the link comes up).
+        systemctl restart robopi-ethernet-static.service || echo "robopi-addon: Ethernet static uplink failed; inspect journalctl -u robopi-ethernet-static" >&2
         running_kernel=$(uname -r)
         if [ "$running_kernel" = "$TARGET_KERNEL_RELEASE" ]; then
             modprobe "$MODULE_NAME"

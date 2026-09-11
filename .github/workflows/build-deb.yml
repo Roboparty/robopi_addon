@@ -77,6 +77,17 @@ jobs:
           echo "::error::service ConditionPathExists mismatch"
           exit 1
         }
+        # static Ethernet uplink must ship its script, unit, defaults, and NM drop-in
+        for path in \
+          lib/systemd/system/robopi-ethernet-static.service \
+          opt/roboparty/bin/robopi-ethernet-static \
+          etc/default/robopi-ethernet-static \
+          etc/NetworkManager/conf.d/80-robopi-ethernet-static.conf; do
+          test -f "$tmp/$path" || {
+            echo "::error::Package missing $path"
+            exit 1
+          }
+        done
         rm -rf "$tmp"
         echo "OK: $DEB bound to ${TARGET_KERNEL_RELEASE}"
 
