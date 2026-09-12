@@ -1,0 +1,8 @@
+# robopi-uart-bridge default configuration
+# One-way forward: PORT_A (UART3) -> PORT_B (UART7)
+# On RoboPi2 / Orange Pi CM5: UART3=/dev/ttyS3, UART7=/dev/ttyS7
+# Do not use /dev/ttyS2 — that is the debug serial console.
+
+PORT_A=/dev/ttyS3
+PORT_B=/dev/ttyS7
+BAUD=115200

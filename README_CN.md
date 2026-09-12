@@ -34,6 +34,7 @@
 | `wifi-reset.service` | 启用 | 监测并重连当前选中的 Wi-Fi，不切换备用网卡 |
 | `robopi-bms-gpio.service` | 启用 | 根据 BMS 状态控制双电池 GPIO 指示灯 |
 | `robopi-fan.service` | 启用 | 开机打开 FAN_SW |
+| `robopi-uart-bridge.service` | 启用 | 单向转发 UART3→UART7（ttyS3→ttyS7，默认 115200） |
 | `robopi-ws2812-white.service` | 启用 | 开机执行 `solid 30 30 30`，停止时熄灯 |
 | `hpm-reset.service` | 启用 | EtherCAN USB 连续缺失时硬复位板载 HPM |
 | `robopi-ethernet-mac.service` | 禁用 | 仅在确认网卡名和网络影响后手动启用 |

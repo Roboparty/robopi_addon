@@ -1,8 +1,11 @@
 # WiFi Reset Monitor default configuration
 # See: /etc/systemd/system/wifi-reset.service
 
-# Check interval in seconds
+# Check interval in seconds while connected
 CHECK_INTERVAL=30
+
+# Poll interval in seconds while disconnected or waiting for the adapter
+RETRY_INTERVAL=5
 
 # Number of consecutive failures before reporting error
 FAIL_THRESHOLD=3

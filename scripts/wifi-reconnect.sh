@@ -3,6 +3,8 @@
 # Only reconnect the selected adapter; never replace an active AP.
 set -u
 CHECK_INTERVAL=${CHECK_INTERVAL:-30}
+# Poll faster while disconnected/waiting so boot or a drop is not stuck behind CHECK_INTERVAL.
+RETRY_INTERVAL=${RETRY_INTERVAL:-5}
 FAIL_THRESHOLD=${FAIL_THRESHOLD:-3}
 WIFI_INTERFACE=${WIFI_INTERFACE:-wlan0}
 log() { echo "wifi-reset-monitor: $*"; }
@@ -31,23 +33,29 @@ reconnect() {
 fail_count=0
 trap 'exit 0' TERM INT
 log "Monitoring $WIFI_INTERFACE (no fallback to another adapter)"
+next_sleep=$RETRY_INTERVAL
 while :; do
     if [[ ! -d /sys/class/net/$WIFI_INTERFACE/wireless ]]; then
         log "Waiting for selected adapter $WIFI_INTERFACE (possibly unplugged)"
+        next_sleep=$RETRY_INTERVAL
     elif healthy; then
         fail_count=0
         rm -f /run/roboparty/wifi-failure
+        next_sleep=$CHECK_INTERVAL
     else
         state=$(nmcli -g GENERAL.STATE device show "$WIFI_INTERFACE" 2>/dev/null)
         case "$state" in
             10\ *|20\ *|40\ *|50\ *|60\ *|70\ *|80\ *|90\ *)
                 # Respect unmanaged/unavailable devices and ongoing activation.
+                next_sleep=$RETRY_INTERVAL
                 ;;
             *)
                 if reconnect; then
                     fail_count=0
+                    next_sleep=$CHECK_INTERVAL
                 else
                     ((fail_count+=1))
+                    next_sleep=$RETRY_INTERVAL
                     if ((fail_count >= FAIL_THRESHOLD)); then
                         mkdir -p /run/roboparty
                         printf '%s: reconnect failed on %s\n' "$(date -Is)" "$WIFI_INTERFACE" > /run/roboparty/wifi-failure
@@ -57,5 +65,5 @@ while :; do
                 fi ;;
         esac
     fi
-    sleep "$CHECK_INTERVAL"
+    sleep "$next_sleep"
 done
