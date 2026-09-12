@@ -1,5 +1,15 @@
 # USB / 板载 Wi-Fi 切换
 
+1.7.5 起：安装包会 blacklist 板载 Broadcom 驱动（`brcmfmac`/`brcmfmac_wcc`），
+开机不再创建 `wlan0`。USB Wi-Fi（aic8800）与蓝牙（hci_uart）不受影响。
+安装时若驱动已加载会立即卸载。恢复板载：
+
+```bash
+sudo rm /etc/modprobe.d/robopi-blacklist-onboard-wifi.conf
+sudo modprobe brcmfmac   # 或重启
+sudo robopi-wifi-select onboard wlan0
+```
+
 1.6.29 起：尚无网卡选择时，板载 `wlan0` 默认为 unmanaged。
 需要板载时执行 `sudo robopi-wifi-select onboard wlan0`（有线/串口）。
 
