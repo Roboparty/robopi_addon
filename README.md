@@ -38,6 +38,7 @@ The package maintainer scripts apply the following default policy:
 | `wifi-reset.service` | Enabled | Monitor and reconnect the selected Wi-Fi interface without switching adapters |
 | `robopi-bms-gpio.service` | Enabled | Drive the dual-battery GPIO indicators from BMS state |
 | `robopi-fan.service` | Enabled | Turn on FAN_SW at boot |
+| `robopi-uart-bridge.service` | Enabled | One-way forward UART3→UART7 (ttyS3→ttyS7, 115200) |
 | `robopi-ws2812-white.service` | Enabled | Run `solid 30 30 30` at boot and turn the strip off when stopped |
 | `hpm-reset.service` | Enabled | Hardware-reset the onboard HPM after repeated EtherCAN USB loss |
 | `robopi-ethernet-mac.service` | Disabled | Enable manually only after checking the interface name and network impact |

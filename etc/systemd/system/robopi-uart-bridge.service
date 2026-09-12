@@ -1,0 +1,21 @@
+[Unit]
+Description=RoboPi one-way UART bridge (UART3 to UART7)
+After=local-fs.target systemd-modules-load.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/default/robopi-uart-bridge
+ExecStart=/usr/bin/python3 /opt/roboparty/bin/robopi-uart-bridge
+Restart=always
+RestartSec=2
+TimeoutStopSec=5
+User=root
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=robopi-uart-bridge
+NoNewPrivileges=yes
+ProtectHome=yes
+
+[Install]
+WantedBy=multi-user.target

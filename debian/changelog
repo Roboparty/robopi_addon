@@ -1,3 +1,12 @@
+robopi-addon (1.7.6-1) stable; urgency=medium
+
+  * Add robopi-uart-bridge: one-way forward UART3 (/dev/ttyS3) to
+    UART7 (/dev/ttyS7) at boot, default 115200 8N1.
+  * Make PORT_A/PORT_B/BAUD configurable via /etc/default/robopi-uart-bridge.
+  * Enable and start the bridge from postinst; stop it from prerm.
+
+ -- changchuanyong <1984715306@qq.com>  Sat, 12 Sep 2026 16:20:00 +0800
+
 robopi-addon (1.7.5-1) stable; urgency=medium
 
   * Ship a modprobe blacklist for the onboard Broadcom Wi-Fi
