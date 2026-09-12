@@ -122,8 +122,36 @@ for path in /sys/class/net/*; do
     nmcli device set "$name" managed no
     ip link set dev "$name" down
 done
+# NM may not autoconnect after general reload + managed toggle. Activate a
+# saved autoconnect infrastructure profile explicitly. Never replace an AP.
+if iw dev "$iface" info 2>/dev/null | grep -qE '^[[:space:]]*type AP$'; then
+    echo "AP active on $iface; not activating a client profile."
+else
+    sel_state=$(nmcli -g GENERAL.STATE device show "$iface" 2>/dev/null || true)
+    if [[ $sel_state == 100* ]]; then
+        echo "Already connected on $iface; leaving the active connection as-is."
+    else
+        activated=no
+        while IFS=: read -r uuid ctype; do
+            [[ $ctype == 802-11-wireless ]] || continue
+            mode=$(nmcli -g 802-11-wireless.mode connection show uuid "$uuid") || continue
+            [[ -z $mode || $mode == infrastructure ]] || continue
+            auto=$(nmcli -g connection.autoconnect connection show uuid "$uuid") || continue
+            [[ $auto == yes ]] || continue
+            bound=$(nmcli -g connection.interface-name connection show uuid "$uuid") || continue
+            [[ -z $bound || $bound == "$iface" ]] || continue
+            if nmcli --wait 20 connection up uuid "$uuid" ifname "$iface"; then
+                echo "Activated Wi-Fi profile $uuid on $iface"
+                activated=yes
+                break
+            fi
+        done < <(nmcli -t -f UUID,TYPE connection show)
+        if [[ $activated != yes ]]; then
+            echo "No autoconnect client profile activated on $iface; use nmcli --ask if first-time setup is needed."
+        fi
+    fi
+fi
 systemctl restart wifi-reset.service
 trap - EXIT
 echo "Saved: $iface. Driver/firmware must already be installed."
-echo "Connect: sudo nmcli --ask device wifi connect SSID ifname $iface"
 echo 'Existing active AP/client connections on the selected interface are preserved.'
