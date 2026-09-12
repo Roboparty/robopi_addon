@@ -9,6 +9,11 @@ if [ "$1" = remove ] || [ "$1" = purge ]; then
     if [ -d "/lib/modules/$TARGET_KERNEL_RELEASE" ]; then
         depmod -a "$TARGET_KERNEL_RELEASE" 2>/dev/null || true
     fi
+    # Package-owned blacklist is gone; bring onboard Wi-Fi back without reboot.
+    if [ "$(uname -r)" = "$TARGET_KERNEL_RELEASE" ]; then
+        modprobe brcmutil 2>/dev/null || true
+        modprobe brcmfmac 2>/dev/null || true
+    fi
 fi
 
 #DEBHELPER#

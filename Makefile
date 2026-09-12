@@ -72,6 +72,7 @@ install: all check-prebuilt-module check-prebuilt-wifi
 	install -D -m 0755 scripts/robopi-usb-wifi-init.sh $(DESTDIR)/opt/roboparty/bin/robopi-usb-wifi-init
 	install -D -m 0644 etc/systemd/system/robopi-usb-wifi.service $(DESTDIR)/lib/systemd/system/robopi-usb-wifi.service
 	install -D -m 0644 etc/modules-load.d/robopi-aic-wifi.conf $(DESTDIR)/etc/modules-load.d/robopi-aic-wifi.conf
+	install -D -m 0644 etc/modprobe.d/robopi-blacklist-onboard-wifi.conf $(DESTDIR)/etc/modprobe.d/robopi-blacklist-onboard-wifi.conf
 
 	# Keep operator documentation and the original vendor archive for traceability.
 	install -D -m 0644 docs/usb-wifi-bundle.md $(DESTDIR)/usr/share/doc/robopi-addon/usb-wifi-bundle.md

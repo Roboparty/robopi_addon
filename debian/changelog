@@ -1,3 +1,12 @@
+robopi-addon (1.7.5-1) stable; urgency=medium
+
+  * Ship a modprobe blacklist for the onboard Broadcom Wi-Fi
+    (brcmfmac/brcmfmac_wcc) so wlan0 is not created at boot.
+  * Unload the onboard driver on configure and reload it on package
+    removal. USB Wi-Fi and Bluetooth are unaffected.
+
+ -- changchuanyong <1984715306@qq.com>  Sat, 12 Sep 2026 09:10:00 +0800
+
 robopi-addon (1.7.4-1) stable; urgency=medium
 
   * Pin robopi-usb-wifi-init and robopi-usb-wifi.service to

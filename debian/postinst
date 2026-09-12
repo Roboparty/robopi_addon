@@ -67,6 +67,13 @@ if [ "$1" = configure ]; then
             nmcli general reload 2>/dev/null || true
             echo "robopi-addon: onboard wlan0 unmanaged by default; select with robopi-wifi-select usb|onboard wlan0"
         fi
+        # Blacklist ships in the package; unload a live onboard radio so wlan0
+        # disappears without waiting for the next reboot. USB Wi-Fi and BT stay.
+        if [ "$(uname -r)" = "$TARGET_KERNEL_RELEASE" ] && lsmod | grep -q '^brcmfmac'; then
+            modprobe -r brcmfmac_wcc 2>/dev/null || true
+            modprobe -r brcmfmac 2>/dev/null || true
+            echo "robopi-addon: onboard Wi-Fi driver unloaded; remove blacklist and reboot to restore wlan0"
+        fi
         # Also scan already plugged-in adapters; reloading udev rules alone does
         # not activate SYSTEMD_WANTS on a device that is already active.
         systemctl restart --no-block robopi-wifi-autoselect.service || true
