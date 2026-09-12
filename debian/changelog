@@ -1,3 +1,13 @@
+robopi-addon (1.7.8-1) stable; urgency=medium
+
+  * Capture the HPM firmware log from /dev/ttyS4 at 115200 baud while the
+    USB-CAN flight recorder is active.
+  * Include the HPM UART journal in USB-CAN debug snapshots.
+  * Enter HPM USB BootROM mode through hpm_reset and hpm_boot_enable, erase
+    flash before programming address 0x400, then restore normal boot mode.
+
+ -- changchuanyong <1984715306@qq.com>  Sun, 13 Sep 2026 00:55:00 +0800
+
 robopi-addon (1.7.7-1) stable; urgency=medium
 
   * After robopi-wifi-select saves the interface, explicitly bring up a

@@ -45,6 +45,7 @@ The package maintainer scripts apply the following default policy:
 | `robopi-hw-test.service` | Disabled | Manufacturing/diagnostic tool; conflicts with the BMS GPIO service |
 | `robopi-sig-key.service` | Disabled | SIG/key diagnostic tool; conflicts with the BMS GPIO service |
 | `usbcan-capture.service` | Disabled and not started | USB ring capture used only while reproducing a fault |
+| `hpm-log-capture.service` | Disabled and not started | Records the HPM log on `/dev/ttyS4` while USB capture is active |
 
 `hpm-autoflash.service` is a static maintenance unit with no `[Install]`
 section. The package currently does not install the HPM udev trigger it expects,
@@ -185,6 +186,9 @@ sudo systemctl stop usbcan-capture.service
 analyze-ethercan-pcap /var/lib/robopi/usbcan-snapshots/<snapshot-directory>
 ```
 
+Starting USB capture also records the HPM log from `/dev/ttyS4` at 115200 baud.
+The snapshot stores that journal as `hpm-uart-journal.txt`.
+
 See [USB-CAN capture](docs/usbcan-dump.md) for configuration, dependencies,
 capture filters, and resource costs.
 
@@ -296,6 +300,7 @@ bash tests/usb-wifi-init-test.sh
 bash tests/wifi-autoselect-test.sh
 bash tests/wifi-reconnect-test.sh
 python3 tests/bms-gpio-test.py
+bash tests/flash-hpm-test.sh
 bash tests/usbcan-capture-test.sh
 bash tests/usbcan-snapshot-test.sh
 python3 -m unittest -v tests/test_analyze_ethercan_pcap.py

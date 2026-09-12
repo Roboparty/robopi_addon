@@ -37,6 +37,9 @@ output=$(
 [[ -f "$output/usbcan.pcap0" ]]
 cmp "$tmpdir/capture/usbcan.pcap0" "$output/usbcan.pcap0"
 [[ -f "$output/lsusb.txt" && -f "$output/dmesg.txt" ]]
+[[ -f "$output/hpm-uart-journal.txt" ]]
+grep -q '^journalctl:-u hpm-log-capture.service -b --no-pager$' \
+    "$output/hpm-uart-journal.txt"
 grep -q '^systemctl:stop usbcan-capture.service$' "$tmpdir/systemctl.log"
 grep -q '^systemctl:start usbcan-capture.service$' "$tmpdir/systemctl.log"
 

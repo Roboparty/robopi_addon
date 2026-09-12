@@ -14,6 +14,7 @@
   `scripts/analyze_ethercan_pcap.py` 流式分析。安装 `robopi-addon` 后也可直接运行
   `analyze-ethercan-pcap`。
 - snapshot 会短暂停止抓包，复制结束后立即恢复。
+- 抓包服务运行期间同时记录 HPM 的 `/dev/ttyS4` 串口日志。
 - 默认不压缩 snapshot，避免在运控调试期间产生明显 CPU 负载。
 - 抓取指定 USB Bus，避免记录键盘、存储设备等无关或敏感数据。
 
@@ -96,6 +97,7 @@ sudo tee /etc/systemd/system/usbcan-capture.service >/dev/null <<'EOF'
 Description=RoboPi USB-CAN usbmon flight recorder
 Documentation=file:/usr/share/doc/robopi-addon/usbcan-dump.md
 After=local-fs.target systemd-modules-load.service
+Wants=hpm-log-capture.service
 StartLimitIntervalSec=0
 
 [Service]
@@ -148,11 +150,26 @@ sudo ls -lh /run/usbcan/
 `tcpdump -C` 使用十进制 MB。达到 `FILE_COUNT` 后会覆盖最旧文件，因此磁盘或
 内存使用量不会持续增长。
 
+## HPM 串口日志
+
+`ttyS4` 是 HPM 固件日志口。启动 `usbcan-capture.service` 时会同时启动
+`hpm-log-capture.service`，默认以 115200 波特率、8N1、无流控读取
+`/dev/ttyS4`，并写入 systemd journal。串口和波特率可在
+`/etc/default/hpm-log-capture` 中修改。
+
+实时查看 HPM 日志：
+
+```bash
+sudo journalctl -fu hpm-log-capture.service
+```
+
+该串口应保持为 HPM 专用日志口，不能同时由 serial getty 或其他程序读取。
+
 ## 保存故障现场
 
 软件包安装 `/usr/bin/usbcan-debug-snapshot`。命令使用文件锁阻止并发 snapshot，
-暂停抓包后只复制 `usbcan.pcap*`，同时保存 USB 拓扑、CAN 接口、服务日志和内核
-日志，并在成功或异常退出时恢复原本处于运行状态的抓包服务。
+暂停抓包后只复制 `usbcan.pcap*`，同时保存 USB 拓扑、CAN 接口、抓包服务日志、
+HPM 串口日志和内核日志，并在成功或异常退出时恢复原本处于运行状态的抓包服务。
 
 故障复现后立即执行：
 
@@ -169,6 +186,9 @@ snapshot 默认写入 `/var/lib/robopi/usbcan-snapshots`，避免部分 Armbian 
 ```text
 /var/lib/robopi/usbcan-snapshots/20260911-103000
 ```
+
+其中 `hpm-uart-journal.txt` 是本次开机以来的 HPM 串口日志，便于与 pcap 时间戳
+对照分析。
 
 复制约 512 MB 数据时抓包会暂停数秒，具体时间取决于存储介质。脚本使用 trap
 保证复制或诊断命令失败时仍会尝试恢复服务。执行后应确认：

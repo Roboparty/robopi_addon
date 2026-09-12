@@ -2,6 +2,7 @@
 set -eu
 
 service=${USBCAN_CAPTURE_SERVICE:-usbcan-capture.service}
+hpm_log_service=${HPM_LOG_CAPTURE_SERVICE:-hpm-log-capture.service}
 source_dir=${USBCAN_CAPTURE_DIR:-/run/usbcan}
 snapshot_root=${USBCAN_SNAPSHOT_DIR:-/var/lib/robopi/usbcan-snapshots}
 lock_file=${USBCAN_SNAPSHOT_LOCK:-/run/lock/usbcan-debug-snapshot.lock}
@@ -76,6 +77,8 @@ ip -details -statistics link show type can \
     > "$destination/can-interfaces.txt" 2>&1 || true
 journalctl -u "$service" -b --no-pager \
     > "$destination/usbcan-capture-journal.txt" 2>&1 || true
+journalctl -u "$hpm_log_service" -b --no-pager \
+    > "$destination/hpm-uart-journal.txt" 2>&1 || true
 dmesg --ctime > "$destination/dmesg.txt" 2>&1 || true
 
 snapshot_complete=yes

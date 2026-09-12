@@ -50,10 +50,14 @@ install: all check-prebuilt-module check-prebuilt-wifi
 	install -D -m 0755 scripts/analyze_ethercan_pcap.py $(DESTDIR)/opt/roboparty/bin/analyze-ethercan-pcap
 	install -D -m 0755 scripts/usbcan-capture.sh $(DESTDIR)/opt/roboparty/bin/usbcan-capture
 	install -D -m 0755 scripts/usbcan-debug-snapshot.sh $(DESTDIR)/opt/roboparty/bin/usbcan-debug-snapshot
+	install -D -m 0755 scripts/hpm-log-capture.sh $(DESTDIR)/opt/roboparty/bin/hpm-log-capture
 	install -D -m 0644 etc/systemd/system/robopi-bms-gpio.service $(DESTDIR)/lib/systemd/system/robopi-bms-gpio.service
 	install -D -m 0644 etc/systemd/system/usbcan-capture.service $(DESTDIR)/lib/systemd/system/usbcan-capture.service
+	install -D -m 0644 etc/systemd/system/hpm-log-capture.service $(DESTDIR)/lib/systemd/system/hpm-log-capture.service
 	install -D -m 0644 etc/default/usbcan-capture $(DESTDIR)/etc/default/usbcan-capture
+	install -D -m 0644 etc/default/hpm-log-capture $(DESTDIR)/etc/default/hpm-log-capture
 	install -D -m 0644 docs/bms-gpio.md $(DESTDIR)/usr/share/doc/robopi-addon/bms-gpio.md
+	install -D -m 0644 docs/log.md $(DESTDIR)/usr/share/doc/robopi-addon/log.md
 	install -D -m 0644 docs/usbcan-dump.md $(DESTDIR)/usr/share/doc/robopi-addon/usbcan-dump.md
 
 	# AIC8800 USB Wi-Fi naming, hotplug selection, kernel modules, and firmware.

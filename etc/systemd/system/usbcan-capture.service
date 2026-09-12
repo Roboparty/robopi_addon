@@ -2,6 +2,7 @@
 Description=RoboPi USB-CAN usbmon flight recorder
 Documentation=file:/usr/share/doc/robopi-addon/usbcan-dump.md
 After=local-fs.target systemd-modules-load.service
+Wants=hpm-log-capture.service
 StartLimitIntervalSec=0
 
 [Service]

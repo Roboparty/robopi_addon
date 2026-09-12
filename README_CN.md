@@ -41,6 +41,7 @@
 | `robopi-hw-test.service` | 禁用 | 产测/诊断工具，与 BMS GPIO 服务互斥 |
 | `robopi-sig-key.service` | 禁用 | SIG/按键诊断工具，与 BMS GPIO 服务互斥 |
 | `usbcan-capture.service` | 禁用且不启动 | 问题复现期间才启用的 USB 环形抓包 |
+| `hpm-log-capture.service` | 禁用且不启动 | USB 抓包期间记录 `/dev/ttyS4` 上的 HPM 日志 |
 
 `hpm-autoflash.service` 是静态维护单元，没有 `[Install]` 入口。当前包不安装它所需
 的 HPM udev 触发规则，因此不要把它当作默认自动升级机制。
@@ -163,6 +164,9 @@ sudo systemctl stop usbcan-capture.service
 analyze-ethercan-pcap /var/lib/robopi/usbcan-snapshots/<快照目录>
 ```
 
+启动 USB 抓包时会同时以 115200 波特率记录 `/dev/ttyS4` 上的 HPM 日志，快照内
+保存为 `hpm-uart-journal.txt`。
+
 配置、依赖、抓包过滤器和资源开销见 [USB-CAN 抓包说明](docs/usbcan-dump.md)。
 
 ## 稳定以太网 MAC
@@ -269,6 +273,7 @@ bash tests/usb-wifi-init-test.sh
 bash tests/wifi-autoselect-test.sh
 bash tests/wifi-reconnect-test.sh
 python3 tests/bms-gpio-test.py
+bash tests/flash-hpm-test.sh
 bash tests/usbcan-capture-test.sh
 bash tests/usbcan-snapshot-test.sh
 python3 -m unittest -v tests/test_analyze_ethercan_pcap.py
