@@ -159,10 +159,6 @@ install: all check-prebuilt-module check-prebuilt-wifi
 	install -D -m 0644 etc/default/robopi-ethernet-mac \
 		$(DESTDIR)/etc/default/robopi-ethernet-mac
 
-	# Optional source patch for systems that need maximum GPIO0_C2 drive strength.
-	install -D -m 0644 patches/0001-rk3588s-robopi2-gpio0-c2-max-drive.patch \
-		$(DESTDIR)/usr/share/robopi-addon/patches/0001-rk3588s-robopi2-gpio0-c2-max-drive.patch
-
 # Convenience wrapper used by developers and CI.
 package:
 	dpkg-buildpackage -us -uc -b

@@ -15,7 +15,7 @@ License: GPL
  The modules declare MODULE_LICENSE("GPL"). Corresponding unmodified vendor
  source is retained in UGREEN_AIC-AX300_LinuxDriver_V1.6.zip.
 
-Files: src/* scripts/* etc/* docs/* debian/* Makefile README* LICENSE .github/* tests/* patches/*
+Files: src/* scripts/* etc/* docs/* debian/* prebuilt/*.patch Makefile README* LICENSE .github/* tests/*
 Copyright: 2025-2026 fanxiaobinggit <16692712013@163.com>
 License: GPL-3.0-only
  This program is free software: you can redistribute it and/or modify

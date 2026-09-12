@@ -6,8 +6,7 @@ Linux 6.18 (wakeup_source, timer, cfg80211 link_id, radio_idx).
 
 Apply on top of UGREEN_AIC-AX300_LinuxDriver_V1.6:
 
-  cd aic8800_linux_drvier
-  patch -p1 < ../aic8800-linux-6.18-compat.patch
+  patch -p1 < prebuilt/aic8800-linux-6.18-compat.patch
 
 --- a/aic8800_linux_drvier/drivers/aic8800/aic8800_fdrv/rwnx_wakelock.c
 +++ b/aic8800_linux_drvier/drivers/aic8800/aic8800_fdrv/rwnx_wakelock.c

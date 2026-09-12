@@ -243,12 +243,6 @@ sudo robopi-gpio0-c2-drive restore
 sudo reboot
 ```
 
-The matching kernel source patch is also installed at:
-
-```text
-/usr/share/robopi-addon/patches/0001-rk3588s-robopi2-gpio0-c2-max-drive.patch
-```
-
 ## Install
 
 Check the architecture and running kernel before installation. The package

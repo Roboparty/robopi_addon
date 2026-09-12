@@ -1,3 +1,12 @@
+robopi-addon (1.7.9-1) stable; urgency=medium
+
+  * Remove the stale packaging and documentation references to the deleted
+    GPIO0_C2 kernel source patch.
+  * Move the AIC8800 Linux 6.18 compatibility patch into prebuilt alongside
+    its vendor source archive and compiled modules.
+
+ -- changchuanyong <1984715306@qq.com>  Sun, 13 Sep 2026 01:05:00 +0800
+
 robopi-addon (1.7.8-1) stable; urgency=medium
 
   * Capture the HPM firmware log from /dev/ttyS4 at 115200 baud while the

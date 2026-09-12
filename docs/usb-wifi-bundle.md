@@ -49,12 +49,12 @@ iw dev
 `prebuilt/`，并随二进制包放入 `/usr/share/doc/robopi-addon/vendor/`。
 归档包含本次编译使用的驱动源码及固件，校验值在 `prebuilt/aic8800.sha256`。
 模块于 2026-09-11 在 `6.18.51-current-rockchip64` 上应用
-`patches/aic8800-linux-6.18-compat.patch` 后编译：
+`prebuilt/aic8800-linux-6.18-compat.patch` 后编译：
 
 ```bash
-unzip UGREEN_AIC-AX300_LinuxDriver_V1.6.zip
+unzip prebuilt/UGREEN_AIC-AX300_LinuxDriver_V1.6.zip
+patch -p1 < prebuilt/aic8800-linux-6.18-compat.patch
 cd aic8800_linux_drvier
-patch -p1 < /path/to/patches/aic8800-linux-6.18-compat.patch
 cd drivers/aic8800
 make
 ```

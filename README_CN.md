@@ -216,12 +216,6 @@ sudo robopi-gpio0-c2-drive restore
 sudo reboot
 ```
 
-匹配内核源码的补丁也安装在：
-
-```text
-/usr/share/robopi-addon/patches/0001-rk3588s-robopi2-gpio0-c2-max-drive.patch
-```
-
 ## 安装
 
 安装前先确认架构和运行内核。这个包只支持 ARM64，并包含固定目标内核的预编译

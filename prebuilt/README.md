@@ -18,4 +18,4 @@ Files:
 Rebuild and replace modules whenever the target kernel version, configuration,
 or symbol versions change. Never force-load a mismatched module.
 
-AIC8800 6.18 source patches live in `patches/aic8800-linux-6.18-compat.patch`.
+AIC8800 6.18 source patch: `prebuilt/aic8800-linux-6.18-compat.patch`.

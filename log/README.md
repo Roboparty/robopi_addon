@@ -95,7 +95,7 @@ pcap 和 pcapng。
 下载到开发机：
 
 ```bash
-scp robo@192.168.137.9:/home/robo/usbcan-snapshots/20260912-093022/usbcan-merged.pcap \
+scp robo@192.168.137.250:/home/robo/usbcan-snapshots/20260912-093022/usbcan-merged.pcap \
   /home/robo/roboparty_repo/deb/robopi_addon/log/
 ```
 
