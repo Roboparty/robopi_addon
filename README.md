@@ -4,8 +4,9 @@
 
 `robopi-addon` is the board support package for RoboPi RK3588S (ARM64). It can
 be installed independently and does not require `roboparty-base`. It installs
-Wi-Fi, BMS GPIO, fan, WS2812, EtherCAN maintenance, and field diagnostic tools
-under `/opt/roboparty`. Frequently used commands are also exposed through
+Wi-Fi, BMS GPIO, fan, and WS2812 board support tools under `/opt/roboparty`.
+EtherCAN maintenance and field diagnostics are provided separately by
+`robopi-analyze`. Frequently used addon commands are also exposed through
 `/usr/bin`.
 
 The package configures and enables several systemd services. Keep a serial
@@ -15,16 +16,23 @@ interrupt the current SSH session.
 
 ## Quick reference
 
+USB-CAN, HPM, CAN, and synchronized diagnostic commands below require the
+separate `robopi-analyze` package.
+
 | Task | Command or documentation |
 |---|---|
 | Inspect or select Wi-Fi | `robopi-wifi-select status` / [Wi-Fi selection](docs/wifi-selection.md) |
 | Control the WS2812 strip | `sudo robopi-ws2812 --help` |
 | Control the fan | `sudo robopi-fan on\|off\|status` |
 | Check the Ethernet MAC | `robopi-ethernet-mac check` |
-| Inspect GPIO0_C2 drive strength | `sudo robopi-gpio0-c2-drive status` |
 | Review BMS GPIO behavior | [BMS GPIO](docs/bms-gpio.md) |
-| Capture a USB-CAN fault snapshot | `sudo usbcan-debug-snapshot` / [capture guide](docs/usbcan-dump.md) |
+| Capture a USB-CAN fault snapshot | `sudo usbcan-debug-snapshot` / `/usr/share/doc/robopi-analyze/usbcan-dump.md.gz` |
 | Analyze a USB-CAN capture | `analyze-ethercan-pcap <pcap-file-or-directory>` |
+| Restart all four CAN links | `sudo robopi-can-restart` |
+| Capture four CAN links as ASC | `sudo robopi-can-capture /home/robo/can.asc` |
+| Capture synchronized seven-dimensional diagnostics | `sudo robopi-sixd-capture /home/robo/robopi-logs/session` |
+| Analyze a synchronized session | `robopi-sixd-analyze /home/robo/robopi-logs/session` |
+| Export session ZIP with SHA-256 | `robopi-sixd-export /home/robo/robopi-logs/session` |
 | List failed services | `systemctl --failed` |
 
 ## Default service policy
@@ -35,21 +43,16 @@ The package maintainer scripts apply the following default policy:
 |---|---|---|
 | `robopi-usb-wifi.service` | Enabled | Initialize AIC8800 USB Wi-Fi |
 | `robopi-wifi-autoselect.service` | Enabled | Select USB or onboard Wi-Fi at boot |
-| `wifi-reset.service` | Enabled | Monitor and reconnect the selected Wi-Fi interface without switching adapters |
 | `robopi-bms-gpio.service` | Enabled | Drive the dual-battery GPIO indicators from BMS state |
 | `robopi-fan.service` | Enabled | Turn on FAN_SW at boot |
 | `robopi-uart-bridge.service` | Enabled | One-way forward UART3→UART7 (ttyS3→ttyS7, 115200) |
 | `robopi-ws2812-white.service` | Enabled | Run `solid 30 30 30` at boot and turn the strip off when stopped |
-| `hpm-reset.service` | Enabled | Hardware-reset the onboard HPM after repeated EtherCAN USB loss |
 | `robopi-ethernet-mac.service` | Disabled | Enable manually only after checking the interface name and network impact |
 | `robopi-hw-test.service` | Disabled | Manufacturing/diagnostic tool; conflicts with the BMS GPIO service |
 | `robopi-sig-key.service` | Disabled | SIG/key diagnostic tool; conflicts with the BMS GPIO service |
-| `usbcan-capture.service` | Disabled and not started | USB ring capture used only while reproducing a fault |
-| `hpm-log-capture.service` | Disabled and not started | Records the HPM log on `/dev/ttyS4` while USB capture is active |
 
-`hpm-autoflash.service` is a static maintenance unit with no `[Install]`
-section. The package currently does not install the HPM udev trigger it expects,
-so it must not be treated as an active automatic update mechanism.
+`usbcan-capture.service` and `hpm-log-capture.service` belong to
+`robopi-analyze`; this package does not manage their state.
 
 ## Wi-Fi
 
@@ -134,11 +137,11 @@ sudo robopi-fan off
 systemctl status robopi-fan.service
 ```
 
-## EtherCAN and USB capture
+## EtherCAN and USB capture (robopi-analyze)
 
 The HPM is the onboard EtherCAN controller and connects to the RK3588 through
-an onboard USB hub. The package installs EtherCAN firmware, HPM maintenance
-tools, and an HPM hardware-reset service. The firmware is installed at:
+an onboard USB hub. Install `robopi-analyze` for EtherCAN firmware, HPM
+maintenance tools, and USB capture. Its firmware is installed at:
 
 ```text
 /opt/roboparty/lib/firmware/ethercanfd_v1.0.5-20260829.bin
@@ -166,12 +169,9 @@ lsusb -d 1209:2323
 Do not leave `brightness` at `1`; the HPM remains offline while reset is
 asserted.
 
-`hpm-reset.service` performs the same high-low pulse automatically. By
-default, it checks HPM VID:PID `1209:2323` every 2 seconds. After 10
-consecutive misses, it asserts the GPIO for 0.5 seconds, releases reset, and
-waits 15 seconds. Settings are in `/etc/default/hpm-reset`. The firmware
-flasher, `/opt/roboparty/bin/flash_hpm.sh`, is a maintenance interface and
-should only be run after confirming the firmware image and device state.
+The firmware flasher, `/opt/roboparty/bin/flash_hpm.sh`, is a maintenance
+interface and should only be run after confirming the firmware image and
+device state.
 
 USB capture is disabled by default. While reproducing a fault, uncompressed
 ring-buffer pcaps can be kept in `/run/usbcan`, with a default limit of
@@ -189,8 +189,8 @@ analyze-ethercan-pcap /var/lib/robopi/usbcan-snapshots/<snapshot-directory>
 Starting USB capture also records the HPM log from `/dev/ttyS4` at 115200 baud.
 The snapshot stores that journal as `hpm-uart-journal.txt`.
 
-See [USB-CAN capture](docs/usbcan-dump.md) for configuration, dependencies,
-capture filters, and resource costs.
+See `/usr/share/doc/robopi-analyze/usbcan-dump.md.gz` for configuration,
+dependencies, capture filters, and resource costs.
 
 ## Stable Ethernet MAC
 
@@ -226,23 +226,6 @@ Explicitly enable the boot service only when this behavior is required:
 sudo systemctl enable --now robopi-ethernet-mac.service
 ```
 
-## GPIO0_C2 drive strength
-
-`robopi-gpio0-c2-drive` can back up and modify the active boot DTB to select
-`pcfg_pull_down_drv_level_5` for GPIO0_C2. This is an explicit device-tree
-maintenance operation and is never performed automatically during package
-installation.
-
-```bash
-sudo robopi-gpio0-c2-drive status
-sudo robopi-gpio0-c2-drive apply
-sudo reboot
-
-# Restore the DTB saved by the first apply
-sudo robopi-gpio0-c2-drive restore
-sudo reboot
-```
-
 ## Install
 
 Check the architecture and running kernel before installation. The package
@@ -259,7 +242,7 @@ Recommended post-installation checks:
 ```bash
 systemctl --failed
 systemctl status robopi-bms-gpio.service robopi-fan.service
-systemctl status robopi-wifi-autoselect.service wifi-reset.service
+systemctl status robopi-wifi-autoselect.service
 journalctl -b -p warning
 ```
 
@@ -292,12 +275,7 @@ Regression tests that do not access hardware:
 ```bash
 bash tests/usb-wifi-init-test.sh
 bash tests/wifi-autoselect-test.sh
-bash tests/wifi-reconnect-test.sh
 python3 tests/bms-gpio-test.py
-bash tests/flash-hpm-test.sh
-bash tests/usbcan-capture-test.sh
-bash tests/usbcan-snapshot-test.sh
-python3 -m unittest -v tests/test_analyze_ethercan_pcap.py
 ```
 
 The generated `.deb` is written to the parent directory.

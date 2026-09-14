@@ -9,7 +9,7 @@ Rules-Requires-Root: no
 Package: robopi-addon
 Architecture: arm64
 Depends: ${shlibs:Depends}, ${misc:Depends}, kmod,
-         network-manager, iw, eject, udev, util-linux, tcpdump, usbutils,
+         network-manager, iw, eject, udev, util-linux,
          python3, python3-serial, python3-usb, python3-crcmod, python3-hid
 Suggests: roboparty-base (>= 1.0.0)
 Description: RoboPi RK3588S WS2812 and SIG/key GPIO helpers

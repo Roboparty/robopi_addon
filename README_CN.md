@@ -3,13 +3,16 @@
 [English](README.md)
 
 `robopi-addon` 是 RoboPi RK3588S（ARM64）的板级支持包，可独立安装，不强制依赖
-`roboparty-base`。它把 Wi-Fi、BMS GPIO、风扇、WS2812、EtherCAN 维护工具和现场
-诊断工具统一安装到 `/opt/roboparty`，并为常用命令提供 `/usr/bin` 入口。
+`roboparty-base`。它把 Wi-Fi、BMS GPIO、风扇和 WS2812 板级工具安装到
+`/opt/roboparty`；EtherCAN 维护工具和现场诊断工具由独立的 `robopi-analyze`
+软件包提供。常用的 addon 命令也有 `/usr/bin` 入口。
 
 这个包会配置并启用部分 systemd 服务。首次安装或升级前，建议保留串口或另一条
 有线连接，避免 Wi-Fi 自动切换或设备重启影响当前 SSH 会话。
 
 ## 快速索引
+
+以下 USB-CAN、HPM、CAN 和同步诊断命令需另行安装 `robopi-analyze`。
 
 | 需求 | 命令或文档 |
 |---|---|
@@ -17,10 +20,14 @@
 | 控制 WS2812 灯带 | `sudo robopi-ws2812 --help` |
 | 控制风扇 | `sudo robopi-fan on\|off\|status` |
 | 检查以太网 MAC | `robopi-ethernet-mac check` |
-| 查看 GPIO0_C2 驱动配置 | `sudo robopi-gpio0-c2-drive status` |
 | 查看 BMS GPIO 行为 | [BMS GPIO 说明](docs/bms-gpio.md) |
-| USB-CAN 故障抓包 | `sudo usbcan-debug-snapshot` / [抓包说明](docs/usbcan-dump.md) |
+| USB-CAN 故障抓包 | `sudo usbcan-debug-snapshot` / `/usr/share/doc/robopi-analyze/usbcan-dump.md.gz` |
 | 分析 USB-CAN 抓包 | `analyze-ethercan-pcap <pcap 文件或目录>` |
+| 重启四路 CAN 接口 | `sudo robopi-can-restart` |
+| 将四路 CAN 抓为 ASC | `sudo robopi-can-capture /home/robo/can.asc` |
+| 同步采集七维诊断日志 | `sudo robopi-sixd-capture /home/robo/robopi-logs/session` |
+| 分析七维诊断日志 | `robopi-sixd-analyze /home/robo/robopi-logs/session` |
+| 导出七维日志 ZIP 并生成 SHA-256 | `robopi-sixd-export /home/robo/robopi-logs/session` |
 | 查看失败服务 | `systemctl --failed` |
 
 ## 默认服务行为
@@ -31,20 +38,16 @@
 |---|---|---|
 | `robopi-usb-wifi.service` | 启用 | 初始化 AIC8800 USB Wi-Fi |
 | `robopi-wifi-autoselect.service` | 启用 | 开机选择 USB 或板载 Wi-Fi |
-| `wifi-reset.service` | 启用 | 监测并重连当前选中的 Wi-Fi，不切换备用网卡 |
 | `robopi-bms-gpio.service` | 启用 | 根据 BMS 状态控制双电池 GPIO 指示灯 |
 | `robopi-fan.service` | 启用 | 开机打开 FAN_SW |
 | `robopi-uart-bridge.service` | 启用 | 单向转发 UART3→UART7（ttyS3→ttyS7，默认 115200） |
 | `robopi-ws2812-white.service` | 启用 | 开机执行 `solid 30 30 30`，停止时熄灯 |
-| `hpm-reset.service` | 启用 | EtherCAN USB 连续缺失时硬复位板载 HPM |
 | `robopi-ethernet-mac.service` | 禁用 | 仅在确认网卡名和网络影响后手动启用 |
 | `robopi-hw-test.service` | 禁用 | 产测/诊断工具，与 BMS GPIO 服务互斥 |
 | `robopi-sig-key.service` | 禁用 | SIG/按键诊断工具，与 BMS GPIO 服务互斥 |
-| `usbcan-capture.service` | 禁用且不启动 | 问题复现期间才启用的 USB 环形抓包 |
-| `hpm-log-capture.service` | 禁用且不启动 | USB 抓包期间记录 `/dev/ttyS4` 上的 HPM 日志 |
 
-`hpm-autoflash.service` 是静态维护单元，没有 `[Install]` 入口。当前包不安装它所需
-的 HPM udev 触发规则，因此不要把它当作默认自动升级机制。
+`usbcan-capture.service` 和 `hpm-log-capture.service` 属于 `robopi-analyze`，
+本包不管理它们的启停状态。
 
 ## Wi-Fi
 
@@ -120,10 +123,10 @@ sudo robopi-fan off
 systemctl status robopi-fan.service
 ```
 
-## EtherCAN 与 USB 抓包
+## EtherCAN 与 USB 抓包（robopi-analyze）
 
-HPM 是板载 EtherCAN 控制器，通过板载 USB Hub 接入 RK3588。软件包安装 EtherCAN
-固件、HPM 维护工具和 HPM 硬复位服务。固件位于：
+HPM 是板载 EtherCAN 控制器，通过板载 USB Hub 接入 RK3588。EtherCAN 固件、
+HPM 维护工具和 USB 抓包功能需要另行安装 `robopi-analyze`。其固件位于：
 
 ```text
 /opt/roboparty/lib/firmware/ethercanfd_v1.0.5-20260829.bin
@@ -148,10 +151,8 @@ lsusb -d 1209:2323
 
 不要把 `brightness` 长时间留在 `1`，否则 HPM 会一直离线。
 
-`hpm-reset.service` 会自动完成同样的高低电平脉冲。它默认每 2 秒检查一次 HPM 的
-VID:PID `1209:2323`，连续 10 次缺失后拉高 GPIO 0.5 秒，再释放复位并等待 15 秒。
-参数位于 `/etc/default/hpm-reset`。固件刷写脚本
-`/opt/roboparty/bin/flash_hpm.sh` 属于维护入口，应在明确固件和设备状态后手动使用。
+固件刷写脚本 `/opt/roboparty/bin/flash_hpm.sh` 属于维护入口，应在明确固件和设备
+状态后手动使用。
 
 USB 抓包默认关闭。问题复现时可把未压缩环形 pcap 保存在 `/run/usbcan`，默认上限
 为 `8 x 64 MiB = 512 MiB`；故障后再复制快照到磁盘并离线分析：
@@ -167,7 +168,8 @@ analyze-ethercan-pcap /var/lib/robopi/usbcan-snapshots/<快照目录>
 启动 USB 抓包时会同时以 115200 波特率记录 `/dev/ttyS4` 上的 HPM 日志，快照内
 保存为 `hpm-uart-journal.txt`。
 
-配置、依赖、抓包过滤器和资源开销见 [USB-CAN 抓包说明](docs/usbcan-dump.md)。
+配置、依赖、抓包过滤器和资源开销见
+`/usr/share/doc/robopi-analyze/usbcan-dump.md.gz`。
 
 ## 稳定以太网 MAC
 
@@ -200,22 +202,6 @@ sudo robopi-ethernet-mac restore [接口名]
 sudo systemctl enable --now robopi-ethernet-mac.service
 ```
 
-## GPIO0_C2 驱动强度
-
-`robopi-gpio0-c2-drive` 可备份并修改当前启动 DTB，把 GPIO0_C2 配置为
-`pcfg_pull_down_drv_level_5`。这是对设备树的显式维护操作，软件包安装过程不会自动
-执行。
-
-```bash
-sudo robopi-gpio0-c2-drive status
-sudo robopi-gpio0-c2-drive apply
-sudo reboot
-
-# 回退到首次 apply 保存的 DTB
-sudo robopi-gpio0-c2-drive restore
-sudo reboot
-```
-
 ## 安装
 
 安装前先确认架构和运行内核。这个包只支持 ARM64，并包含固定目标内核的预编译
@@ -232,7 +218,7 @@ sudo apt install ./robopi-addon_*_arm64.deb
 ```bash
 systemctl --failed
 systemctl status robopi-bms-gpio.service robopi-fan.service
-systemctl status robopi-wifi-autoselect.service wifi-reset.service
+systemctl status robopi-wifi-autoselect.service
 journalctl -b -p warning
 ```
 
@@ -265,12 +251,7 @@ dpkg-buildpackage -us -uc -b -aarm64
 ```bash
 bash tests/usb-wifi-init-test.sh
 bash tests/wifi-autoselect-test.sh
-bash tests/wifi-reconnect-test.sh
 python3 tests/bms-gpio-test.py
-bash tests/flash-hpm-test.sh
-bash tests/usbcan-capture-test.sh
-bash tests/usbcan-snapshot-test.sh
-python3 -m unittest -v tests/test_analyze_ethercan_pcap.py
 ```
 
 生成的 `.deb` 位于源码目录的上一级。

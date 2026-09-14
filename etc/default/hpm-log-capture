@@ -1,3 +1,0 @@
-# HPM firmware log UART.
-HPM_LOG_DEVICE=/dev/ttyS4
-HPM_LOG_BAUD=115200

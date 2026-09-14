@@ -83,7 +83,7 @@ sudo nmcli --ask device wifi connect RoboParty ifname wlan1
 sudo robopi-wifi-select onboard wlan0
 ```
 
-选择保存于 `/etc/roboparty/wifi-interface`，wifi-reset.service 会读取它，
+选择保存于 `/etc/roboparty/wifi-interface`，
 重启后仍只监控那个接口。NetworkManager 配置保存在
 `/etc/NetworkManager/conf.d/90-robopi-wifi-select.conf`。
 其他无线接口设置为 unmanaged，不卸载驱动、不改设备树、不禁用蓝牙，也不影响
@@ -114,8 +114,6 @@ iw dev wlan1 info
 lsusb -t
 iw dev
 nmcli device status
-systemctl status wifi-reset.service --no-pager
-journalctl -u wifi-reset.service -n 30 --no-pager
 ip -4 address show dev wlan1
 ping -I wlan1 -c 5 10.42.0.1
 ```

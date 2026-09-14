@@ -6,7 +6,6 @@ TARGET_KERNEL_RELEASE=6.18.51-current-rockchip64
 if [ "$1" = remove ] || [ "$1" = deconfigure ]; then
     systemctl stop robopi-ws2812-white.service 2>/dev/null || true
     systemctl stop robopi-fan.service 2>/dev/null || true
-    systemctl stop usbcan-capture.service 2>/dev/null || true
     systemctl stop robopi-uart-bridge.service 2>/dev/null || true
 
     if [ "$(uname -r)" = "$TARGET_KERNEL_RELEASE" ]; then

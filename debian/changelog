@@ -1,3 +1,71 @@
+robopi-addon (1.7.18-1) stable; urgency=medium
+
+  * Move HPM and communication diagnostics into the standalone robopi-analyze
+    package so the board addon no longer owns logging and capture tools.
+
+ -- changchuanyong <1984715306@qq.com>  Mon, 14 Sep 2026 00:00:00 +0800
+
+robopi-addon (1.7.17-1) stable; urgency=medium
+
+  * Rename and organize log tools by capture, analysis, dashboard and
+    synchronized dimension responsibilities.
+  * Document every log file and install the seven-dimension file map.
+
+ -- changchuanyong <1984715306@qq.com>  Mon, 14 Sep 2026 00:00:00 +0800
+
+robopi-addon (1.7.16-1) stable; urgency=medium
+
+  * Organize log tooling into capture, analysis, dashboard, captures and
+    results directories while preserving installed command names.
+
+ -- changchuanyong <1984715306@qq.com>  Mon, 14 Sep 2026 00:00:00 +0800
+
+robopi-addon (1.7.15-1) stable; urgency=medium
+
+  * Remove obsolete GPIO0_C2, HPM reset and Wi-Fi reconnect helper scripts
+    together with their unused service integration.
+
+ -- changchuanyong <1984715306@qq.com>  Mon, 14 Sep 2026 00:00:00 +0800
+
+robopi-addon (1.7.14-1) stable; urgency=medium
+
+  * Organize CAN, HPM and USB-CAN capture utilities under the log tooling
+    directory while preserving their installed command paths.
+
+ -- changchuanyong <1984715306@qq.com>  Mon, 14 Sep 2026 00:00:00 +0800
+
+robopi-addon (1.7.13-1) stable; urgency=medium
+
+  * Add one-command seven-dimensional log export with per-file and archive
+    SHA-256 manifests.
+
+ -- changchuanyong <1984715306@qq.com>  Mon, 14 Sep 2026 00:00:00 +0800
+
+robopi-addon (1.7.12-1) stable; urgency=medium
+
+  * Add synchronized seven-dimensional diagnostics for USB inventory, CAN
+    details, dmesg, HPM ttyS4, USB pcap, CAN ASC and inference screen logs.
+  * Add a shared offline timeline analyzer and extend the live dashboard with
+    per-dimension availability.
+
+ -- changchuanyong <1984715306@qq.com>  Mon, 14 Sep 2026 00:00:00 +0800
+
+robopi-addon (1.7.11-1) stable; urgency=medium
+
+  * Add robopi-can-capture to record can0 through can3 and convert the
+    candump log to Vector-compatible ASC without changing CAN settings.
+
+ -- changchuanyong <1984715306@qq.com>  Mon, 14 Sep 2026 02:00:00 +0800
+
+robopi-addon (1.7.10-1) stable; urgency=medium
+
+  * Install the live USB-CAN and HPM communication dashboard as
+    /usr/bin/robopi-comm-status.
+  * Add robopi-can-restart to cycle can0 through can3 down and up without
+    changing their CAN configuration.
+
+ -- changchuanyong <1984715306@qq.com>  Sun, 13 Sep 2026 01:20:00 +0800
+
 robopi-addon (1.7.9-1) stable; urgency=medium
 
   * Remove the stale packaging and documentation references to the deleted

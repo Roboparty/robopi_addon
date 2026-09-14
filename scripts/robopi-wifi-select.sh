@@ -92,8 +92,7 @@ chmod 644 "$tmp"
 mv "$tmp" "$nmconf"
 printf 'WIFI_INTERFACE=%s\n' "$iface" > "$state"
 chmod 644 "$state"
-systemctl stop wifi-reset.service
-trap 'rm -f "$tmp"; systemctl start wifi-reset.service || true' EXIT
+trap 'rm -f "$tmp"' EXIT
 nmcli general reload
 nmcli device set "$iface" managed yes
 # Preserve saved credentials when this same adapter changes from wlx<MAC> to wlan1.
@@ -151,7 +150,6 @@ else
         fi
     fi
 fi
-systemctl restart wifi-reset.service
 trap - EXIT
 echo "Saved: $iface. Driver/firmware must already be installed."
 echo 'Existing active AP/client connections on the selected interface are preserved.'
