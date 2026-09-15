@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 // Copyright (C) 2025-2026 fanxiaobinggit
 // RoboPi2 RK3588S PWM6_M1 (GPIO4_C1) WS2812 controller, 12 LEDs.
-// Frames are transmitted by the robopi-ws2812 kernel module.
+// Frames are transmitted by the robopi-ws2812 driver provided by the BSP.
 // Build: gcc -O3 -Wall -Wextra -o ws2812_pwm6 ws2812_pwm6.c -lm
 // Run:   sudo robopi-ws2812 <off|on|solid|flash|chase|rainbow|demo> [args]
 //
@@ -28,7 +28,7 @@ static int open_backend(void) {
     device_fd = open(DEVICE_PATH, O_WRONLY | O_CLOEXEC);
     if (device_fd < 0) {
         perror("open " DEVICE_PATH);
-        fprintf(stderr, "Kernel module is unavailable; try: sudo modprobe robopi-ws2812\n");
+        fprintf(stderr, "WS2812 device is unavailable; verify the RoboPi BSP and device tree\n");
         return -1;
     }
     return 0;

@@ -25,8 +25,5 @@ override_dh_auto_install:
 override_dh_installsystemd:
 	dh_installsystemd --no-enable --no-start
 
-override_dh_strip:
-	dh_strip -X.ko
-
 override_dh_shlibdeps:
 	dh_shlibdeps -- -l/usr/$(DEB_HOST_GNU_TYPE)/lib

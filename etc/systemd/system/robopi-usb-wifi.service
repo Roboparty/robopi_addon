@@ -1,7 +1,6 @@
 [Unit]
-Description=Prepare bundled RoboPi AIC USB Wi-Fi driver
-After=systemd-udevd.service systemd-modules-load.service
-ConditionPathExists=/lib/modules/6.18.51-current-rockchip64/kernel/drivers/net/wireless/aic8800/aic8800_fdrv.ko
+Description=Prepare RoboPi AIC USB Wi-Fi device
+After=systemd-udevd.service
 
 [Service]
 Type=oneshot

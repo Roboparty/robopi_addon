@@ -1,19 +1,12 @@
 #!/bin/sh
 set -e
 
-TARGET_KERNEL_RELEASE=6.18.51-current-rockchip64
-
 if [ "$1" = remove ] || [ "$1" = purge ]; then
     # Do not-load removed hotplug rules on running systems as well.
     udevadm control --reload-rules 2>/dev/null || true
-    if [ -d "/lib/modules/$TARGET_KERNEL_RELEASE" ]; then
-        depmod -a "$TARGET_KERNEL_RELEASE" 2>/dev/null || true
-    fi
     # Package-owned blacklist is gone; bring onboard Wi-Fi back without reboot.
-    if [ "$(uname -r)" = "$TARGET_KERNEL_RELEASE" ]; then
-        modprobe brcmutil 2>/dev/null || true
-        modprobe brcmfmac 2>/dev/null || true
-    fi
+    modprobe brcmutil 2>/dev/null || true
+    modprobe brcmfmac 2>/dev/null || true
 fi
 
 #DEBHELPER#

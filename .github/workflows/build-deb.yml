@@ -28,7 +28,7 @@ jobs:
         echo "✅ Tag matches changelog: v$TAG_VERSION"
 
     - name: Install build dependencies
-      run: sudo apt-get update && sudo apt-get install -y build-essential debhelper unzip kmod binutils
+      run: sudo apt-get update && sudo apt-get install -y build-essential debhelper
 
     - name: Build Debian package
       run: |
@@ -41,35 +41,14 @@ jobs:
         echo "PKG_VERSION=$VERSION" >> $GITHUB_ENV
         ls -l robopi-addon_*_arm64.deb
 
-    - name: Verify package kernel binding
+    - name: Verify package has no kernel modules
       run: |
-        TARGET_KERNEL_RELEASE=6.18.51-current-rockchip64
         DEB=$(ls robopi-addon_*_arm64.deb | head -1)
-        dpkg-deb -c "$DEB" | grep -F "/lib/modules/${TARGET_KERNEL_RELEASE}/" || {
-          echo "::error::Package missing modules for ${TARGET_KERNEL_RELEASE}"
+        if dpkg-deb -c "$DEB" | grep -E '/lib/modules/|/usr/src/robopi-ws2812-|\.ko$'; then
+          echo "::error::BSP-owned kernel module content found in $DEB"
           exit 1
-        }
-
-        tmp=$(mktemp -d)
-        dpkg-deb -x "$DEB" "$tmp"
-        dpkg-deb -e "$DEB" "$tmp/DEBIAN"
-        grep -F "target=${TARGET_KERNEL_RELEASE}" "$tmp/opt/roboparty/bin/robopi-usb-wifi-init" || {
-          echo "::error::init script does not target ${TARGET_KERNEL_RELEASE}"
-          exit 1
-        }
-        grep -F "ConditionPathExists=/lib/modules/${TARGET_KERNEL_RELEASE}/" \
-          "$tmp/lib/systemd/system/robopi-usb-wifi.service" || {
-          echo "::error::service ConditionPathExists mismatch"
-          exit 1
-        }
-        for script in postinst prerm postrm; do
-          grep -F "TARGET_KERNEL_RELEASE=${TARGET_KERNEL_RELEASE}" "$tmp/DEBIAN/$script" || {
-            echo "::error::$script does not target ${TARGET_KERNEL_RELEASE}"
-            exit 1
-          }
-        done
-        rm -rf "$tmp"
-        echo "OK: $DEB bound to ${TARGET_KERNEL_RELEASE}"
+        fi
+        echo "OK: $DEB contains no kernel modules or DKMS source"
 
     - name: Upload Debian package
       uses: actions/upload-artifact@v4

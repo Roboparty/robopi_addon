@@ -51,7 +51,8 @@
 
 ## Wi-Fi
 
-软件包包含 UGREEN AX300（AIC8800DC）的预编译模块、固件及初始化工具。只有一个
+内核驱动和固件由 BSP 提供。本包包含 UGREEN AX300（AIC8800DC）的设备命名和
+初始化工具。只有一个
 受支持的 USB 无线网卡时，它会固定命名为 `wlan1`。自动选择默认优先 USB Wi-Fi；
 没有检测到 USB 网卡时不会修改现有连接，已选中的 USB 网卡被拔出时也不会悄悄
 回退到板载网卡。
@@ -63,7 +64,7 @@ sudo robopi-wifi-select usb
 sudo robopi-wifi-select onboard
 ```
 
-切换接口会中断现有无线连接。模块、固件、设备识别及恢复流程见
+切换接口会中断现有无线连接。固件、设备识别及恢复流程见
 [USB Wi-Fi 随包交付说明](docs/usb-wifi-bundle.md) 和
 [Wi-Fi 切换说明](docs/wifi-selection.md)。
 
@@ -107,9 +108,8 @@ sudo robopi-ws2812 off
 robopi-ws2812 --help
 ```
 
-持续动画可用 `Ctrl+C` 停止，程序退出时会熄灯。软件包只安装针对目标内核预编译
-的 `robopi-ws2812.ko`，不会自动安装或修改设备树；系统必须使用匹配内核，并在
-设备树中启用 PWM6_M1。升级内核后需要重新构建模块和软件包。
+持续动画可用 `Ctrl+C` 停止，程序退出时会熄灯。`robopi-ws2812` 驱动和 PWM6_M1
+设备树配置由 BSP 提供；本包只安装用户态命令和服务。
 
 ## 风扇
 
@@ -204,12 +204,11 @@ sudo systemctl enable --now robopi-ethernet-mac.service
 
 ## 安装
 
-安装前先确认架构和运行内核。这个包只支持 ARM64，并包含固定目标内核的预编译
-模块：
+安装前先确认架构。这个包只支持 ARM64，并要求 RoboPi BSP 已包含 WS2812 和
+AIC8800 驱动：
 
 ```bash
 dpkg --print-architecture
-uname -r
 sudo apt install ./robopi-addon_*_arm64.deb
 ```
 
@@ -227,22 +226,15 @@ journalctl -b -p warning
 ARM64 板上原生构建：
 
 ```bash
-sudo apt install build-essential debhelper fakeroot kmod unzip binutils
+sudo apt install build-essential debhelper fakeroot
 dpkg-buildpackage -us -uc -b
 ```
 
 在 x86_64/EPYC 主机上交叉构建 ARM64 包：
 
 ```bash
-sudo apt install build-essential debhelper fakeroot kmod unzip binutils \
+sudo apt install build-essential debhelper fakeroot \
   gcc-aarch64-linux-gnu libc6-dev-arm64-cross
-dpkg-buildpackage -us -uc -b -aarm64
-```
-
-软件包固定面向 `6.18.51-current-rockchip64`，模块位于对应的
-`prebuilt/6.18.51-current-rockchip64/` 目录：
-
-```bash
 dpkg-buildpackage -us -uc -b -aarm64
 ```
 
@@ -267,8 +259,8 @@ ip -details link
 uname -r
 ```
 
-预编译模块加载失败时，首先比较 `uname -r` 与包内模块目录；网络异常时，先运行
-`robopi-wifi-select status`，再查看 Wi-Fi 三个服务的本次启动日志。
+BSP 驱动不可用时，检查 BSP 内核配置和 `dmesg`；网络异常时，先运行
+`robopi-wifi-select status`，再查看 Wi-Fi 服务的本次启动日志。
 
 ## 卸载
 
@@ -277,6 +269,5 @@ sudo apt remove robopi-addon
 sudo apt purge robopi-addon
 ```
 
-卸载脚本会停止灯带、风扇和 USB 抓包服务，尝试卸载 WS2812 内核模块，并刷新
-模块依赖。已有的 NetworkManager 连接配置以及运行期间生成的诊断快照不会被主动
-删除。
+卸载脚本会停止灯带、风扇和 UART 转发服务，不会修改 BSP 自带的内核模块。已有
+的 NetworkManager 连接配置以及运行期间生成的诊断快照不会被主动删除。

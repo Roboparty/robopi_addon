@@ -1,10 +1,6 @@
 #!/bin/sh
 set -e
 
-MODULE_NAME=robopi-ws2812
-TARGET_KERNEL_RELEASE=6.18.51-current-rockchip64
-MODULE_PATH="/lib/modules/$TARGET_KERNEL_RELEASE/extra/$MODULE_NAME.ko"
-
 is_chroot()
 {
     if command -v systemd-detect-virt >/dev/null 2>&1; then
@@ -16,24 +12,6 @@ is_chroot()
 }
 
 if [ "$1" = configure ]; then
-    if [ ! -f "$MODULE_PATH" ]; then
-        echo "robopi-addon: prebuilt kernel module is missing: $MODULE_PATH" >&2
-        exit 1
-    fi
-
-    # Remove registrations left by releases that installed this module using
-    # DKMS. The new package owns a prebuilt module and does not require DKMS.
-    if command -v dkms >/dev/null 2>&1; then
-        dkms status -m "$MODULE_NAME" 2>/dev/null |
-            sed -n "s#^$MODULE_NAME/\([^,:]*\)[,:].*#\1#p" |
-            while IFS= read -r old_version; do
-                [ -n "$old_version" ] || continue
-                dkms remove -m "$MODULE_NAME" -v "$old_version" --all >/dev/null 2>&1 || true
-            done
-    fi
-
-    depmod -a "$TARGET_KERNEL_RELEASE"
-
     systemctl daemon-reload 2>/dev/null || true
     systemctl enable robopi-usb-wifi.service 2>/dev/null || true
     systemctl enable robopi-wifi-autoselect.service 2>/dev/null || true
@@ -68,7 +46,7 @@ if [ "$1" = configure ]; then
         fi
         # Blacklist ships in the package; unload a live onboard radio so wlan0
         # disappears without waiting for the next reboot. USB Wi-Fi and BT stay.
-        if [ "$(uname -r)" = "$TARGET_KERNEL_RELEASE" ] && lsmod | grep -q '^brcmfmac'; then
+        if lsmod | grep -q '^brcmfmac'; then
             modprobe -r brcmfmac_wcc 2>/dev/null || true
             modprobe -r brcmfmac 2>/dev/null || true
             echo "robopi-addon: onboard Wi-Fi driver unloaded; remove blacklist and reboot to restore wlan0"
@@ -76,15 +54,6 @@ if [ "$1" = configure ]; then
         # Also scan already plugged-in adapters; reloading udev rules alone does
         # not activate SYSTEMD_WANTS on a device that is already active.
         systemctl restart --no-block robopi-wifi-autoselect.service || true
-        running_kernel=$(uname -r)
-        if [ "$running_kernel" = "$TARGET_KERNEL_RELEASE" ]; then
-            # Orange Pi / boards without PWM6_M1 return ENODEV; do not fail install.
-            modprobe "$MODULE_NAME" || echo "robopi-addon: $MODULE_NAME not available on this board (PWM6_M1 missing?)" >&2
-        else
-            echo "robopi-addon: module targets $TARGET_KERNEL_RELEASE; current kernel is $running_kernel" >&2
-            echo "robopi-addon: module will load after booting the matching kernel" >&2
-        fi
-
         systemctl stop robopi-hw-test.service robopi-sig-key.service
         systemctl restart robopi-bms-gpio.service || echo "robopi-addon: BMS GPIO service failed; check journalctl -u robopi-bms-gpio" >&2
         systemctl restart robopi-fan.service 2>/dev/null || true

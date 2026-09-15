@@ -1,16 +1,9 @@
 #!/bin/sh
-# Install-time and boot-time preparation; never changes NetworkManager profiles.
+# Install-time and boot-time preparation; drivers are provided by the BSP.
 set -eu
-target=6.18.51-current-rockchip64
-if [ "$(uname -r)" != "$target" ]; then
-    echo "robopi-usb-wifi: modules require $target; skipping current kernel $(uname -r)" >&2
-    exit 0
-fi
-modprobe aic_load_fw
-modprobe aic8800_fdrv
 udevadm control --reload-rules
 # Handle an adapter already plugged in before package installation. Future
-# hotplug events use aic.rules. Never issue a global udev trigger.
+# Never issue a global udev trigger.
 for disk in /sys/class/block/*; do
     [ -e "$disk" ] || continue
     [ ! -e "$disk/partition" ] || continue

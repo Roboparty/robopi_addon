@@ -106,8 +106,8 @@ iw dev wlan1 info
 
 ## 前提与验收
 
-从 1.6.18 起，软件包内置当前目标内核的 AIC8800 驱动、固件和 udev 规则，
-无需手动编译安装。详情及内核限制见 [USB 驱动说明](usb-wifi-bundle.md)。
+从 1.8.0 起，AIC8800 驱动由 BSP 提供，软件包只安装固件和 udev 规则。
+详情见 [USB 驱动说明](usb-wifi-bundle.md)。
 选择网卡前仍需确认 USB 已绑定 aic8800_fdrv，并出现在 iw dev。
 
 ```bash

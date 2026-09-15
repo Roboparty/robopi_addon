@@ -1,7 +1,6 @@
 [Unit]
 Description=RoboPi WS2812 boot blue light
-After=systemd-modules-load.service
-Requires=systemd-modules-load.service
+After=local-fs.target
 
 [Service]
 Type=oneshot

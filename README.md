@@ -56,8 +56,9 @@ The package maintainer scripts apply the following default policy:
 
 ## Wi-Fi
 
-The package contains prebuilt modules, firmware, and initialization tools for
-the UGREEN AX300 (AIC8800DC). When exactly one supported USB adapter is present,
+The BSP provides the AIC8800 kernel drivers and firmware. This package contains
+device naming and initialization tools for the UGREEN AX300 (AIC8800DC). When
+exactly one supported USB adapter is present,
 it is assigned the stable name `wlan1`. Automatic selection prefers USB
 Wi-Fi. It leaves existing connections unchanged when no USB adapter is found,
 and it does not silently fall back to onboard Wi-Fi if the selected USB adapter
@@ -72,7 +73,7 @@ sudo robopi-wifi-select onboard
 
 Changing interfaces interrupts the current wireless connection. See
 [Bundled USB Wi-Fi support](docs/usb-wifi-bundle.md) and
-[Wi-Fi selection](docs/wifi-selection.md) for modules, firmware, device
+[Wi-Fi selection](docs/wifi-selection.md) for firmware, device
 identification, and recovery procedures.
 
 ## BMS GPIO
@@ -120,10 +121,9 @@ robopi-ws2812 --help
 ```
 
 Press `Ctrl+C` to stop a continuous animation; the program turns the strip
-off before exiting. The package installs a prebuilt `robopi-ws2812.ko` for
-one target kernel and does not install or modify the device tree. The running
-kernel must match the module, and PWM6_M1 must already be enabled in the device
-tree. A kernel upgrade requires rebuilt modules and a new package.
+off before exiting. The BSP provides the `robopi-ws2812` driver and enables
+PWM6_M1 in the device tree; this package only installs the user-space command
+and service.
 
 ## Fan
 
@@ -228,12 +228,11 @@ sudo systemctl enable --now robopi-ethernet-mac.service
 
 ## Install
 
-Check the architecture and running kernel before installation. The package
-supports ARM64 only and contains prebuilt modules for one fixed target kernel:
+Check the architecture before installation. The package supports ARM64 only
+and requires a RoboPi BSP containing the WS2812 and AIC8800 drivers:
 
 ```bash
 dpkg --print-architecture
-uname -r
 sudo apt install ./robopi-addon_*_arm64.deb
 ```
 
@@ -251,22 +250,15 @@ journalctl -b -p warning
 Native build on an ARM64 board:
 
 ```bash
-sudo apt install build-essential debhelper fakeroot kmod unzip binutils
+sudo apt install build-essential debhelper fakeroot
 dpkg-buildpackage -us -uc -b
 ```
 
 Cross-build an ARM64 package on an x86_64/EPYC host:
 
 ```bash
-sudo apt install build-essential debhelper fakeroot kmod unzip binutils \
+sudo apt install build-essential debhelper fakeroot \
   gcc-aarch64-linux-gnu libc6-dev-arm64-cross
-dpkg-buildpackage -us -uc -b -aarm64
-```
-
-The package targets `6.18.51-current-rockchip64`; its modules are stored under
-the matching `prebuilt/6.18.51-current-rockchip64/` directory:
-
-```bash
 dpkg-buildpackage -us -uc -b -aarm64
 ```
 
@@ -291,9 +283,9 @@ ip -details link
 uname -r
 ```
 
-If a prebuilt module fails to load, first compare `uname -r` with the module
-directory in the package. For Wi-Fi problems, run `robopi-wifi-select status`
-and inspect the current-boot logs for the three Wi-Fi services.
+If a BSP driver is unavailable, inspect the BSP kernel configuration and
+`dmesg`. For Wi-Fi problems, run `robopi-wifi-select status` and inspect the
+current-boot logs for the Wi-Fi services.
 
 ## Uninstall
 
@@ -302,7 +294,6 @@ sudo apt remove robopi-addon
 sudo apt purge robopi-addon
 ```
 
-The removal scripts stop the WS2812, fan, and USB capture services, attempt to
-unload the WS2812 kernel module, and refresh module dependencies. Existing
-NetworkManager connection profiles and diagnostic snapshots created at runtime
-are not removed automatically.
+The removal scripts stop the WS2812, fan, and UART bridge services. BSP-owned
+kernel modules are not modified. Existing NetworkManager connection profiles
+and diagnostic snapshots created at runtime are not removed automatically.
