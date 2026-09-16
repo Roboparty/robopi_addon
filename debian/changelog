@@ -1,3 +1,14 @@
+robopi-addon (1.8.1-1) stable; urgency=medium
+
+  * Reinstall /etc/modules-load.d/robopi-ws2812.conf: the 1.8.0 refactor
+    removed the loading entry together with the bundled modules, but the
+    BSP only ships the .ko, so /dev/robopi-ws2812 never appeared at boot
+    and robopi-ws2812-white.service failed on every boot.
+  * Load robopi-ws2812 from postinst (best effort) so the boot light comes
+    back right after package installation.
+
+ -- changchuanyong <1984715306@qq.com>  Wed, 16 Sep 2026 00:00:00 +0800
+
 robopi-addon (1.8.0-1) stable; urgency=medium
 
   * Remove all bundled kernel modules, DKMS support and module lifecycle

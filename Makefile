@@ -68,6 +68,10 @@ install: all
 	install -D -m 0644 etc/systemd/system/robopi-sig-key.service \
 		$(DESTDIR)/lib/systemd/system/robopi-sig-key.service
 
+	# WS2812 autoload entry for the BSP-provided driver.
+	install -D -m 0644 etc/modules-load.d/robopi-ws2812.conf \
+		$(DESTDIR)/etc/modules-load.d/robopi-ws2812.conf
+
 	# Remaining board service units. Enable/start policy lives in Debian maintainer scripts.
 	install -D -m 0644 etc/systemd/system/robopi-ethernet-mac.service \
 		$(DESTDIR)/lib/systemd/system/robopi-ethernet-mac.service
