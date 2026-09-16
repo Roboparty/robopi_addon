@@ -122,8 +122,8 @@ robopi-ws2812 --help
 
 Press `Ctrl+C` to stop a continuous animation; the program turns the strip
 off before exiting. The BSP provides the `robopi-ws2812` driver and enables
-PWM6_M1 in the device tree; this package only installs the user-space command
-and service.
+PWM6_M1 in the device tree; this package installs the user-space command and
+service and loads the driver at boot through modules-load.d.
 
 ## Fan
 

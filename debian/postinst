@@ -57,6 +57,8 @@ if [ "$1" = configure ]; then
         systemctl stop robopi-hw-test.service robopi-sig-key.service
         systemctl restart robopi-bms-gpio.service || echo "robopi-addon: BMS GPIO service failed; check journalctl -u robopi-bms-gpio" >&2
         systemctl restart robopi-fan.service 2>/dev/null || true
+        # Load the BSP-provided driver now; modules-load.d owns the boot path.
+        modprobe robopi-ws2812 2>/dev/null || true
         systemctl restart robopi-ws2812-white.service 2>/dev/null || true
         systemctl restart robopi-uart-bridge.service || echo "robopi-addon: UART bridge failed; inspect journalctl -u robopi-uart-bridge" >&2
     fi
