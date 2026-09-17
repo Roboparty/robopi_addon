@@ -39,7 +39,7 @@
 | `robopi-usb-wifi.service` | 启用 | 初始化 AIC8800 USB Wi-Fi |
 | `robopi-wifi-autoselect.service` | 启用 | 开机选择 USB 或板载 Wi-Fi |
 | `robopi-bms-gpio.service` | 启用 | 根据 BMS 状态控制双电池 GPIO 指示灯 |
-| `robopi-fan.service` | 启用 | 开机打开 FAN_SW |
+| `robopi-fan.service` | 禁用 | 风扇服务默认禁用 |
 | `robopi-uart-bridge.service` | 启用 | 单向转发 UART3→UART7（ttyS3→ttyS7，默认 115200） |
 | `robopi-ws2812-white.service` | 启用 | 开机执行 `solid 30 30 30`，停止时熄灯 |
 | `robopi-ethernet-mac.service` | 禁用 | 仅在确认网卡名和网络影响后手动启用 |
@@ -114,14 +114,12 @@ robopi-ws2812 --help
 
 ## 风扇
 
-FAN_SW 使用 GPIO1_D7（全局 GPIO63），高电平接通风扇电源。默认服务在开机时
-打开风扇，停止服务时关闭风扇。
+FAN_SW 使用 GPIO1_D7（全局 GPIO63），高电平接通风扇电源。风扇服务默认禁用，
+如需手动启用：
 
 ```bash
-sudo robopi-fan status
-sudo robopi-fan on
-sudo robopi-fan off
-systemctl status robopi-fan.service
+sudo systemctl enable robopi-fan.service
+sudo systemctl start robopi-fan.service
 ```
 
 ## EtherCAN 与 USB 抓包（robopi-analyze）
