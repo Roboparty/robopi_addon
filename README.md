@@ -45,7 +45,6 @@ The package maintainer scripts apply the following default policy:
 | `robopi-wifi-autoselect.service` | Enabled | Select USB or onboard Wi-Fi at boot |
 | `robopi-bms-gpio.service` | Enabled | Drive the dual-battery GPIO indicators from BMS state |
 | `robopi-fan.service` | Disabled | Fan service disabled by default |
-| `robopi-uart-bridge.service` | Enabled | One-way forward UART3→UART7 (ttyS3→ttyS7, 115200) |
 | `robopi-ws2812-white.service` | Enabled | Run `solid 30 30 30` at boot and turn the strip off when stopped |
 | `robopi-ethernet-mac.service` | Disabled | Enable manually only after checking the interface name and network impact |
 | `robopi-hw-test.service` | Disabled | Manufacturing/diagnostic tool; conflicts with the BMS GPIO service |
@@ -53,6 +52,14 @@ The package maintainer scripts apply the following default policy:
 
 `usbcan-capture.service` and `hpm-log-capture.service` belong to
 `robopi-analyze`; this package does not manage their state.
+
+One-way UART3→UART7 forwarding is no longer a service of its own. It moved into
+`bms_daemon` (`roboparty-bms` ≥ 1.6.0), which taps the bytes it already reads
+from the BMS instead of letting a second process read the same tty — the two
+readers used to steal bytes from each other on `robopi2`, where the daemon owns
+`/dev/ttyS3`. Configure it with `FORWARD_ENABLE`, `FORWARD_PORT_A`,
+`FORWARD_PORT_B` and `FORWARD_BAUD` in `/etc/default/bms_daemon`; see that
+package's README.
 
 ## Wi-Fi
 
@@ -292,6 +299,6 @@ sudo apt remove robopi-addon
 sudo apt purge robopi-addon
 ```
 
-The removal scripts stop the WS2812, fan, and UART bridge services. BSP-owned
+The removal scripts stop the WS2812 and fan services. BSP-owned
 kernel modules are not modified. Existing NetworkManager connection profiles
 and diagnostic snapshots created at runtime are not removed automatically.

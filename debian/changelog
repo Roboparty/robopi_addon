@@ -1,3 +1,18 @@
+robopi-addon (1.8.3-1) stable; urgency=medium
+
+  * Remove robopi-uart-bridge: one-way UART3->UART7 forwarding moved into
+    bms_daemon (roboparty-bms >= 1.6.0), which taps the bytes it already
+    reads from the BMS. Two processes reading the same tty steal bytes from
+    each other, which is what made the daemon log intermittent BMS read
+    failures on /dev/ttyS3 on robopi2.
+  * postinst retires a bridge left over from an earlier version: it stops and
+    disables the unit, removes the enable symlink that dpkg does not track,
+    and matches the process directly, because by the time postinst runs the
+    unit file is already gone and systemctl can no longer act on it.
+  * Drop the script, unit, /etc/default file and the README rows for them.
+
+ -- cenliey <1140448937@qq.com>  Thu, 18 Sep 2026 12:00:00 +0800
+
 robopi-addon (1.8.2-1) stable; urgency=medium
 
   * Disable robopi-fan.service by default: change systemctl enable to disable
