@@ -1,3 +1,11 @@
+robopi-addon (1.8.2-1) stable; urgency=medium
+
+  * Disable robopi-fan.service by default: change systemctl enable to disable
+    in postinst and comment out service restart during installation.
+  * Update README documentation to reflect fan service disabled status.
+
+ -- cenliey <1140448937@qq.com>  Thu, 18 Sep 2026 00:00:00 +0800
+
 robopi-addon (1.8.1-1) stable; urgency=medium
 
   * Reinstall /etc/modules-load.d/robopi-ws2812.conf: the 1.8.0 refactor

@@ -44,7 +44,7 @@ The package maintainer scripts apply the following default policy:
 | `robopi-usb-wifi.service` | Enabled | Initialize AIC8800 USB Wi-Fi |
 | `robopi-wifi-autoselect.service` | Enabled | Select USB or onboard Wi-Fi at boot |
 | `robopi-bms-gpio.service` | Enabled | Drive the dual-battery GPIO indicators from BMS state |
-| `robopi-fan.service` | Enabled | Turn on FAN_SW at boot |
+| `robopi-fan.service` | Disabled | Fan service disabled by default |
 | `robopi-uart-bridge.service` | Enabled | One-way forward UART3→UART7 (ttyS3→ttyS7, 115200) |
 | `robopi-ws2812-white.service` | Enabled | Run `solid 30 30 30` at boot and turn the strip off when stopped |
 | `robopi-ethernet-mac.service` | Disabled | Enable manually only after checking the interface name and network impact |
@@ -128,13 +128,11 @@ service and loads the driver at boot through modules-load.d.
 ## Fan
 
 FAN_SW uses GPIO1_D7 (global GPIO 63). A high level enables the fan supply.
-The default service turns the fan on at boot and turns it off when stopped.
+The fan service is disabled by default. To enable it manually:
 
 ```bash
-sudo robopi-fan status
-sudo robopi-fan on
-sudo robopi-fan off
-systemctl status robopi-fan.service
+sudo systemctl enable robopi-fan.service
+sudo systemctl start robopi-fan.service
 ```
 
 ## EtherCAN and USB capture (robopi-analyze)
