@@ -40,7 +40,6 @@
 | `robopi-wifi-autoselect.service` | 启用 | 开机选择 USB 或板载 Wi-Fi |
 | `robopi-bms-gpio.service` | 启用 | 根据 BMS 状态控制双电池 GPIO 指示灯 |
 | `robopi-fan.service` | 禁用 | 风扇服务默认禁用 |
-| `robopi-uart-bridge.service` | 启用 | 单向转发 UART3→UART7（ttyS3→ttyS7，默认 115200） |
 | `robopi-ws2812-white.service` | 启用 | 开机执行 `solid 30 30 30`，停止时熄灯 |
 | `robopi-ethernet-mac.service` | 禁用 | 仅在确认网卡名和网络影响后手动启用 |
 | `robopi-hw-test.service` | 禁用 | 产测/诊断工具，与 BMS GPIO 服务互斥 |
@@ -48,6 +47,11 @@
 
 `usbcan-capture.service` 和 `hpm-log-capture.service` 属于 `robopi-analyze`，
 本包不管理它们的启停状态。
+
+单向转发 UART3→UART7 不再是一个独立服务，已移入 `bms_daemon`（`roboparty-bms` ≥ 1.6.0）。
+daemon 直接分流自己已经从 BMS 读到的字节，而不是让第二个进程去读同一个 tty —— 在 `robopi2`
+上 daemon 本就占着 `/dev/ttyS3`，两个读者会互相抢走字节。配置项为 `/etc/default/bms_daemon`
+中的 `FORWARD_ENABLE`、`FORWARD_PORT_A`、`FORWARD_PORT_B`、`FORWARD_BAUD`，详见该包的 README。
 
 ## Wi-Fi
 
@@ -268,5 +272,5 @@ sudo apt remove robopi-addon
 sudo apt purge robopi-addon
 ```
 
-卸载脚本会停止灯带、风扇和 UART 转发服务，不会修改 BSP 自带的内核模块。已有
+卸载脚本会停止灯带和风扇服务，不会修改 BSP 自带的内核模块。已有
 的 NetworkManager 连接配置以及运行期间生成的诊断快照不会被主动删除。

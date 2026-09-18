@@ -12,6 +12,23 @@ is_chroot()
 }
 
 if [ "$1" = configure ]; then
+    # robopi-uart-bridge was removed in 1.8.3: one-way UART3->UART7 forwarding
+    # now lives in bms_daemon (roboparty-bms >= 1.6.0), configured in
+    # /etc/default/bms_daemon. An upgrade would otherwise leave the old bridge
+    # running -- dpkg deletes the unit file, but the enable symlink lives in
+    # /etc/systemd/system/multi-user.target.wants/, which dpkg does not track.
+    # Do this before the daemon-reload below, while systemd can still resolve
+    # the unit; otherwise it keeps running and keeps stealing /dev/ttyS3 from
+    # the daemon that now owns that port.
+    systemctl stop robopi-uart-bridge.service 2>/dev/null || true
+    systemctl disable robopi-uart-bridge.service 2>/dev/null || true
+    rm -f /etc/systemd/system/*.wants/robopi-uart-bridge.service
+    # disable needs the unit file to still exist, and by now dpkg has already
+    # unpacked the version that no longer ships it, so match the process
+    # directly as a backstop.
+    pkill -f '[r]obopi-uart-bridge' 2>/dev/null || true
+    rm -f /etc/default/robopi-uart-bridge
+
     systemctl daemon-reload 2>/dev/null || true
     systemctl enable robopi-usb-wifi.service 2>/dev/null || true
     systemctl enable robopi-wifi-autoselect.service 2>/dev/null || true
@@ -21,7 +38,6 @@ if [ "$1" = configure ]; then
     systemctl enable robopi-bms-gpio.service 2>/dev/null || true
     systemctl disable robopi-fan.service 2>/dev/null || true
     systemctl enable robopi-ws2812-white.service 2>/dev/null || true
-    systemctl enable robopi-uart-bridge.service 2>/dev/null || true
 
     if ! is_chroot; then
         # Persist package files and enable/disable links before GPIO transitions.
@@ -60,7 +76,6 @@ if [ "$1" = configure ]; then
         # Load the BSP-provided driver now; modules-load.d owns the boot path.
         modprobe robopi-ws2812 2>/dev/null || true
         systemctl restart robopi-ws2812-white.service 2>/dev/null || true
-        systemctl restart robopi-uart-bridge.service || echo "robopi-addon: UART bridge failed; inspect journalctl -u robopi-uart-bridge" >&2
     fi
 fi
 

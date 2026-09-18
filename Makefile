@@ -81,12 +81,6 @@ install: all
 		$(DESTDIR)/lib/systemd/system/robopi-fan.service
 	install -D -m 0644 etc/systemd/system/robopi-ws2812-white.service \
 		$(DESTDIR)/lib/systemd/system/robopi-ws2812-white.service
-	install -D -m 0755 scripts/robopi-uart-bridge.py \
-		$(DESTDIR)/opt/roboparty/bin/robopi-uart-bridge
-	install -D -m 0644 etc/systemd/system/robopi-uart-bridge.service \
-		$(DESTDIR)/lib/systemd/system/robopi-uart-bridge.service
-	install -D -m 0644 etc/default/robopi-uart-bridge \
-		$(DESTDIR)/etc/default/robopi-uart-bridge
 
 	# Administrator-editable runtime defaults.
 	install -D -m 0644 etc/default/robopi-ethernet-mac \

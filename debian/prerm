@@ -4,7 +4,6 @@ set -e
 if [ "$1" = remove ] || [ "$1" = deconfigure ]; then
     systemctl stop robopi-ws2812-white.service 2>/dev/null || true
     systemctl stop robopi-fan.service 2>/dev/null || true
-    systemctl stop robopi-uart-bridge.service 2>/dev/null || true
 fi
 
 #DEBHELPER#
