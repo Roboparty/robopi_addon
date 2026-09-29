@@ -39,7 +39,7 @@
 | `robopi-usb-wifi.service` | 启用 | 初始化 AIC8800 USB Wi-Fi |
 | `robopi-wifi-autoselect.service` | 启用 | 开机选择 USB 或板载 Wi-Fi |
 | `robopi-bms-gpio.service` | 启用 | 根据 BMS 状态控制双电池 GPIO 指示灯 |
-| `robopi-fan.service` | 禁用 | 风扇服务默认禁用 |
+| `robopi-fan.service` | **已移除** | 不再随包安装；用 `robopi-fan` CLI 手动控制（见"风扇"） |
 | `robopi-ws2812-white.service` | 启用 | 开机执行 `solid 30 30 30`，停止时熄灯 |
 | `robopi-ethernet-mac.service` | 禁用 | 仅在确认网卡名和网络影响后手动启用 |
 | `robopi-hw-test.service` | 禁用 | 产测/诊断工具，与 BMS GPIO 服务互斥 |
@@ -118,12 +118,13 @@ robopi-ws2812 --help
 
 ## 风扇
 
-FAN_SW 使用 GPIO1_D7（全局 GPIO63），高电平接通风扇电源。风扇服务默认禁用，
-如需手动启用：
+FAN_SW 使用 GPIO1_D7（全局 GPIO63），高电平接通风扇电源。风扇 systemd 服务
+**已不再随包安装**（此前开机持续失败），改为用 CLI 手动控制：
 
 ```bash
-sudo systemctl enable robopi-fan.service
-sudo systemctl start robopi-fan.service
+sudo robopi-fan on
+sudo robopi-fan status
+sudo robopi-fan off
 ```
 
 ## EtherCAN 与 USB 抓包（robopi-analyze）
@@ -219,7 +220,7 @@ sudo apt install ./robopi-addon_*_arm64.deb
 
 ```bash
 systemctl --failed
-systemctl status robopi-bms-gpio.service robopi-fan.service
+systemctl status robopi-bms-gpio.service
 systemctl status robopi-wifi-autoselect.service
 journalctl -b -p warning
 ```

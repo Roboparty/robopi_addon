@@ -1,3 +1,12 @@
+robopi-addon (1.8.4-1) stable; urgency=medium
+
+  * Remove the robopi-fan.service unit (it kept failing at boot on RoboPi2).
+    postinst retires the old enable symlink and any running instance on
+    upgrade; the robopi-fan CLI stays available for manual fan control.
+  * Drop the unit install and the README rows for the service.
+
+ -- wentywenty <2321901849@qq.com>  Sat, 19 Sep 2026 00:00:00 +0800
+
 robopi-addon (1.8.3-1) stable; urgency=medium
 
   * Remove robopi-uart-bridge: one-way UART3->UART7 forwarding moved into

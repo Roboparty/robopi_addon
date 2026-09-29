@@ -44,7 +44,7 @@ The package maintainer scripts apply the following default policy:
 | `robopi-usb-wifi.service` | Enabled | Initialize AIC8800 USB Wi-Fi |
 | `robopi-wifi-autoselect.service` | Enabled | Select USB or onboard Wi-Fi at boot |
 | `robopi-bms-gpio.service` | Enabled | Drive the dual-battery GPIO indicators from BMS state |
-| `robopi-fan.service` | Disabled | Fan service disabled by default |
+| `robopi-fan.service` | **Removed** | Unit no longer shipped; use the `robopi-fan` CLI (see Fan) |
 | `robopi-ws2812-white.service` | Enabled | Run `solid 30 30 30` at boot and turn the strip off when stopped |
 | `robopi-ethernet-mac.service` | Disabled | Enable manually only after checking the interface name and network impact |
 | `robopi-hw-test.service` | Disabled | Manufacturing/diagnostic tool; conflicts with the BMS GPIO service |
@@ -135,11 +135,13 @@ service and loads the driver at boot through modules-load.d.
 ## Fan
 
 FAN_SW uses GPIO1_D7 (global GPIO 63). A high level enables the fan supply.
-The fan service is disabled by default. To enable it manually:
+The systemd service is **no longer shipped** (it kept failing at boot). Control
+the fan manually with the CLI:
 
 ```bash
-sudo systemctl enable robopi-fan.service
-sudo systemctl start robopi-fan.service
+sudo robopi-fan on
+sudo robopi-fan status
+sudo robopi-fan off
 ```
 
 ## EtherCAN and USB capture (robopi-analyze)
@@ -245,7 +247,7 @@ Recommended post-installation checks:
 
 ```bash
 systemctl --failed
-systemctl status robopi-bms-gpio.service robopi-fan.service
+systemctl status robopi-bms-gpio.service
 systemctl status robopi-wifi-autoselect.service
 journalctl -b -p warning
 ```

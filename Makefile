@@ -77,8 +77,6 @@ install: all
 		$(DESTDIR)/lib/systemd/system/robopi-ethernet-mac.service
 	install -D -m 0644 etc/systemd/system/robopi-hw-test.service \
 		$(DESTDIR)/lib/systemd/system/robopi-hw-test.service
-	install -D -m 0644 etc/systemd/system/robopi-fan.service \
-		$(DESTDIR)/lib/systemd/system/robopi-fan.service
 	install -D -m 0644 etc/systemd/system/robopi-ws2812-white.service \
 		$(DESTDIR)/lib/systemd/system/robopi-ws2812-white.service
 
