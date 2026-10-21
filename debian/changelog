@@ -1,3 +1,12 @@
+robopi-addon (1.8.5-1) stable; urgency=medium
+
+  * Avoid unloading the onboard brcmfmac Wi-Fi modules during postinst,
+    since a stalled SDIO driver can block module removal and hang dpkg.
+  * Apply the packaged Wi-Fi blacklist on the next boot and print a reboot
+    notice when the driver is still loaded.
+
+ -- wentywenty <2321901849@qq.com>  Wed, 21 Oct 2026 18:56:38 +0800
+
 robopi-addon (1.8.4-1) stable; urgency=medium
 
   * Remove the robopi-fan.service unit (it kept failing at boot on RoboPi2).
