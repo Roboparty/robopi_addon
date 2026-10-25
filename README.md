@@ -1,8 +1,8 @@
-# roboparty-addon
+# robopi-addon
 
 [中文说明](README_CN.md)
 
-`roboparty-addon` is the board support package for RoboPi RK3588S (ARM64). It can
+`robopi-addon` is the board support package for RoboPi RK3588S (ARM64). It can
 be installed independently and does not require `roboparty-base`. It installs
 Wi-Fi, BMS GPIO, fan, and WS2812 board support tools under `/opt/roboparty`.
 EtherCAN maintenance and field diagnostics are provided separately by
@@ -240,7 +240,7 @@ and requires a RoboPi BSP containing the WS2812 and AIC8800 drivers:
 
 ```bash
 dpkg --print-architecture
-sudo apt install ./roboparty-addon_*_arm64.deb
+sudo apt install ./robopi-addon_*_arm64.deb
 ```
 
 Recommended post-installation checks:
@@ -297,8 +297,8 @@ current-boot logs for the Wi-Fi services.
 ## Uninstall
 
 ```bash
-sudo apt remove roboparty-addon
-sudo apt purge roboparty-addon
+sudo apt remove robopi-addon
+sudo apt purge robopi-addon
 ```
 
 The removal scripts stop the WS2812 and fan services. BSP-owned

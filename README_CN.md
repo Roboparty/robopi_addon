@@ -1,8 +1,8 @@
-# roboparty-addon
+# robopi-addon
 
 [English](README.md)
 
-`roboparty-addon` 是 RoboPi RK3588S（ARM64）的板级支持包，可独立安装，不强制依赖
+`robopi-addon` 是 RoboPi RK3588S（ARM64）的板级支持包，可独立安装，不强制依赖
 `roboparty-base`。它把 Wi-Fi、BMS GPIO、风扇和 WS2812 板级工具安装到
 `/opt/roboparty`；EtherCAN 维护工具和现场诊断工具由独立的 `roboparty-analyze`
 软件包提供。常用的 addon 命令也有 `/usr/bin` 入口。
@@ -213,7 +213,7 @@ AIC8800 驱动：
 
 ```bash
 dpkg --print-architecture
-sudo apt install ./roboparty-addon_*_arm64.deb
+sudo apt install ./robopi-addon_*_arm64.deb
 ```
 
 安装后建议检查：
@@ -269,8 +269,8 @@ BSP 驱动不可用时，检查 BSP 内核配置和 `dmesg`；网络异常时，
 ## 卸载
 
 ```bash
-sudo apt remove roboparty-addon
-sudo apt purge roboparty-addon
+sudo apt remove robopi-addon
+sudo apt purge robopi-addon
 ```
 
 卸载脚本会停止灯带和风扇服务，不会修改 BSP 自带的内核模块。已有

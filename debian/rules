@@ -20,7 +20,7 @@ override_dh_auto_clean:
 	$(MAKE) clean
 
 override_dh_auto_install:
-	$(MAKE) DESTDIR=$(CURDIR)/debian/roboparty-addon VERSION=$(VERSION) install
+	$(MAKE) DESTDIR=$(CURDIR)/debian/robopi-addon VERSION=$(VERSION) install
 
 override_dh_installsystemd:
 	dh_installsystemd --no-enable --no-start
