@@ -9,18 +9,8 @@ permissions:
 jobs:
   build:
     runs-on: [self-hosted, Linux, ARM64, "24.04"]
-    env:
-      # Self-hosted runners may carry a stale /etc/gitconfig proxy that breaks
-      # GitHub checkout. Use the runner's direct network path unless a proxy
-      # is explicitly configured for this workflow.
-      GIT_CONFIG_SYSTEM: /dev/null
 
     steps:
-    - name: Disable inherited Git proxy
-      run: |
-        git config --global --unset-all http.proxy || true
-        git config --global http.proxy "" || true
-
     - name: Checkout code
       uses: actions/checkout@v4
 

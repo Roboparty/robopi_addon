@@ -1,3 +1,10 @@
+robopi-addon (1.8.8-1) stable; urgency=medium
+
+  * Remove runner Git proxy overrides from the build workflow.
+  * Continue publishing only the robopi-addon package.
+
+ -- wentywenty <2321901849@qq.com>  Sun, 25 Oct 2026 13:29:46 +0800
+
 robopi-addon (1.8.7-1) stable; urgency=medium
 
   * Restore the robopi-addon package name; do not ship roboparty-addon.
