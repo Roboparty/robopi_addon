@@ -18,6 +18,8 @@ __pycache__/
 /debian/files
 /debian/robopi-addon/
 /debian/robopi-addon-dbgsym/
+/debian/roboparty-addon/
+/debian/roboparty-addon-dbgsym/
 /debian/tmp/
 /log/**/*.pcap
 /log/**/*.pcapng

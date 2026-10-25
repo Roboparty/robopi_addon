@@ -22,14 +22,14 @@ build/robopi-hw-test: src/hw_test.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 # Stage the complete filesystem tree under DESTDIR. During Debian builds,
-# DESTDIR is debian/robopi-addon rather than the host system root.
+# DESTDIR is debian/roboparty-addon rather than the host system root.
 install: all
 	install -D -m 0755 scripts/robopi-ethernet-static.sh $(DESTDIR)/opt/roboparty/bin/robopi-ethernet-static
 	install -D -m 0644 etc/systemd/system/robopi-ethernet-static.service $(DESTDIR)/lib/systemd/system/robopi-ethernet-static.service
 	# BMS GPIO daemon.
 	install -D -m 0755 scripts/robopi-bms-gpio.py $(DESTDIR)/opt/roboparty/bin/robopi-bms-gpio
 	install -D -m 0644 etc/systemd/system/robopi-bms-gpio.service $(DESTDIR)/lib/systemd/system/robopi-bms-gpio.service
-	install -D -m 0644 docs/bms-gpio.md $(DESTDIR)/usr/share/doc/robopi-addon/bms-gpio.md
+	install -D -m 0644 docs/bms-gpio.md $(DESTDIR)/usr/share/doc/roboparty-addon/bms-gpio.md
 
 # AIC8800 USB Wi-Fi naming and hotplug selection. Drivers and firmware are in BSP.
 	install -D -m 0644 etc/udev/rules.d/70-robopi-usb-wifi-name.rules $(DESTDIR)/etc/udev/rules.d/70-robopi-usb-wifi-name.rules
@@ -42,8 +42,8 @@ install: all
 	install -D -m 0644 etc/modprobe.d/robopi-blacklist-onboard-wifi.conf $(DESTDIR)/etc/modprobe.d/robopi-blacklist-onboard-wifi.conf
 
 	# Keep operator documentation.
-	install -D -m 0644 docs/usb-wifi-bundle.md $(DESTDIR)/usr/share/doc/robopi-addon/usb-wifi-bundle.md
-	install -D -m 0644 docs/wifi-selection.md $(DESTDIR)/usr/share/doc/robopi-addon/wifi-selection.md
+	install -D -m 0644 docs/usb-wifi-bundle.md $(DESTDIR)/usr/share/doc/roboparty-addon/usb-wifi-bundle.md
+	install -D -m 0644 docs/wifi-selection.md $(DESTDIR)/usr/share/doc/roboparty-addon/wifi-selection.md
 
 	# Install operator-facing commands under /opt, then expose stable PATH entries.
 	install -D -m 0755 scripts/robopi-wifi-select.sh $(DESTDIR)/opt/roboparty/bin/robopi-wifi-select
@@ -90,4 +90,4 @@ package:
 
 # Remove generated user-space binaries and Debian staging metadata.
 clean:
-	rm -rf build debian/robopi-addon debian/.debhelper debian/files debian/debhelper-build-stamp
+	rm -rf build debian/roboparty-addon debian/.debhelper debian/files debian/debhelper-build-stamp

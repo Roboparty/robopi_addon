@@ -3,6 +3,9 @@ name: Build RoboPi Addon Deb Package
 on:
   push:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: [self-hosted, Linux, ARM64, "24.04"]
@@ -36,28 +39,34 @@ jobs:
 
         DEBIAN_VERSION=$(dpkg-parsechangelog -S Version)
         VERSION=${DEBIAN_VERSION%%-*}
+        mv "../roboparty-addon_${DEBIAN_VERSION}_arm64.deb" .
         mv "../robopi-addon_${DEBIAN_VERSION}_arm64.deb" .
 
         echo "PKG_VERSION=$VERSION" >> $GITHUB_ENV
-        ls -l robopi-addon_*_arm64.deb
+        ls -l roboparty-addon_*_arm64.deb robopi-addon_*_arm64.deb
 
     - name: Verify package has no kernel modules
       run: |
-        DEB=$(ls robopi-addon_*_arm64.deb | head -1)
-        if dpkg-deb -c "$DEB" | grep -E '/lib/modules/|/usr/src/robopi-ws2812-|\.ko$'; then
-          echo "::error::BSP-owned kernel module content found in $DEB"
-          exit 1
-        fi
-        echo "OK: $DEB contains no kernel modules or DKMS source"
+        for DEB in roboparty-addon_*_arm64.deb robopi-addon_*_arm64.deb; do
+          if dpkg-deb -c "$DEB" | grep -E '/lib/modules/|/usr/src/robopi-ws2812-|\.ko$'; then
+            echo "::error::BSP-owned kernel module content found in $DEB"
+            exit 1
+          fi
+          echo "OK: $DEB contains no kernel modules or DKMS source"
+        done
 
     - name: Upload Debian package
       uses: actions/upload-artifact@v4
       with:
-        name: robopi-addon-v${{ env.PKG_VERSION }}-arm64
-        path: "robopi-addon_*_arm64.deb"
+        name: roboparty-addon-v${{ env.PKG_VERSION }}-arm64
+        path: |
+          roboparty-addon_*_arm64.deb
+          robopi-addon_*_arm64.deb
 
     - name: Upload to GitHub Release
       if: startsWith(github.ref, 'refs/tags/v')
       uses: softprops/action-gh-release@v2
       with:
-        files: "robopi-addon_*_arm64.deb"
+        files: |
+          roboparty-addon_*_arm64.deb
+          robopi-addon_*_arm64.deb

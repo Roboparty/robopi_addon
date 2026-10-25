@@ -1,4 +1,4 @@
-Source: robopi-addon
+Source: roboparty-addon
 Section: electronics
 Priority: optional
 Maintainer: fanxiaobinggit <16692712013@163.com>
@@ -6,7 +6,7 @@ Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.5.1
 Rules-Requires-Root: no
 
-Package: robopi-addon
+Package: roboparty-addon
 Architecture: arm64
 Depends: ${shlibs:Depends}, ${misc:Depends}, kmod,
          network-manager, iw, eject, udev, util-linux,
@@ -16,3 +16,10 @@ Description: RoboPi RK3588S WS2812 and SIG/key GPIO helpers
  Controls a 12-pixel WS2812B-MINI-V3/W strip from PWM6_M1 on the RoboParty RK3588S
  board through the PWM driver provided by the BSP. Also provides SIG-controlled LED output and gated key handling for
  GPIO3_B1, GPIO3_B6, and GPIO3_B4.
+
+Package: robopi-addon
+Architecture: arm64
+Depends: roboparty-addon (= ${binary:Version}), ${misc:Depends}
+Description: transitional package for roboparty-addon
+ This package is a transitional package. It can be removed after
+ roboparty-addon is installed.

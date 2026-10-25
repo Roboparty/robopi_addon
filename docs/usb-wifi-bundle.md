@@ -3,7 +3,7 @@
 支持已验证的 UGREEN AX300 / AIC8800DC。`aic_load_fw` 和 `aic8800_fdrv`
 内核驱动由 RoboPi BSP 提供，本包不再安装或加载内核模块。
 
-安装 `sudo apt install ./robopi-addon_<version>_arm64.deb` 后，无需另行编译驱动：
+安装 `sudo apt install ./roboparty-addon_<version>_arm64.deb` 后，无需另行编译驱动：
 
 - 启用 `robopi-usb-wifi.service`，处理已经插入的虚拟存储设备。
 - 已插入的 AIC 存储设备按 USB VID/PID 匹配处理，不弹出其他磁盘。

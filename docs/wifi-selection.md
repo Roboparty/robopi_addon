@@ -66,7 +66,7 @@ journalctl -b -u robopi-wifi-autoselect.service --no-pager
 已选接口的连接/AP 保留。一次性服务成功后 inactive (dead) 正常，
 请结合日志和 nmcli device status 验证。
 
-安装新版 robopi-addon 后，通过有线 SSH 或串口执行。切换会断开非选中无线
+安装新版 roboparty-addon 后，通过有线 SSH 或串口执行。切换会断开非选中无线
 接口，不能依赖正在被停用的 Wi-Fi SSH 会话。
 
 ```bash

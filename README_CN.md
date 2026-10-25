@@ -1,10 +1,10 @@
-# robopi-addon
+# roboparty-addon
 
 [English](README.md)
 
-`robopi-addon` 是 RoboPi RK3588S（ARM64）的板级支持包，可独立安装，不强制依赖
+`roboparty-addon` 是 RoboPi RK3588S（ARM64）的板级支持包，可独立安装，不强制依赖
 `roboparty-base`。它把 Wi-Fi、BMS GPIO、风扇和 WS2812 板级工具安装到
-`/opt/roboparty`；EtherCAN 维护工具和现场诊断工具由独立的 `robopi-analyze`
+`/opt/roboparty`；EtherCAN 维护工具和现场诊断工具由独立的 `roboparty-analyze`
 软件包提供。常用的 addon 命令也有 `/usr/bin` 入口。
 
 这个包会配置并启用部分 systemd 服务。首次安装或升级前，建议保留串口或另一条
@@ -12,7 +12,7 @@
 
 ## 快速索引
 
-以下 USB-CAN、HPM、CAN 和同步诊断命令需另行安装 `robopi-analyze`。
+以下 USB-CAN、HPM、CAN 和同步诊断命令需另行安装 `roboparty-analyze`。
 
 | 需求 | 命令或文档 |
 |---|---|
@@ -21,7 +21,7 @@
 | 控制风扇 | `sudo robopi-fan on\|off\|status` |
 | 检查以太网 MAC | `robopi-ethernet-mac check` |
 | 查看 BMS GPIO 行为 | [BMS GPIO 说明](docs/bms-gpio.md) |
-| USB-CAN 故障抓包 | `sudo usbcan-debug-snapshot` / `/usr/share/doc/robopi-analyze/usbcan-dump.md.gz` |
+| USB-CAN 故障抓包 | `sudo usbcan-debug-snapshot` / `/usr/share/doc/roboparty-analyze/usbcan-dump.md.gz` |
 | 分析 USB-CAN 抓包 | `analyze-ethercan-pcap <pcap 文件或目录>` |
 | 重启四路 CAN 接口 | `sudo robopi-can-restart` |
 | 将四路 CAN 抓为 ASC | `sudo robopi-can-capture /home/robo/can.asc` |
@@ -45,7 +45,7 @@
 | `robopi-hw-test.service` | 禁用 | 产测/诊断工具，与 BMS GPIO 服务互斥 |
 | `robopi-sig-key.service` | 禁用 | SIG/按键诊断工具，与 BMS GPIO 服务互斥 |
 
-`usbcan-capture.service` 和 `hpm-log-capture.service` 属于 `robopi-analyze`，
+`usbcan-capture.service` 和 `hpm-log-capture.service` 属于 `roboparty-analyze`，
 本包不管理它们的启停状态。
 
 单向转发 UART3→UART7 不再是一个独立服务，已移入 `bms_daemon`（`roboparty-bms` ≥ 1.6.0）。
@@ -127,10 +127,10 @@ sudo robopi-fan status
 sudo robopi-fan off
 ```
 
-## EtherCAN 与 USB 抓包（robopi-analyze）
+## EtherCAN 与 USB 抓包（roboparty-analyze）
 
 HPM 是板载 EtherCAN 控制器，通过板载 USB Hub 接入 RK3588。EtherCAN 固件、
-HPM 维护工具和 USB 抓包功能需要另行安装 `robopi-analyze`。其固件位于：
+HPM 维护工具和 USB 抓包功能需要另行安装 `roboparty-analyze`。其固件位于：
 
 ```text
 /opt/roboparty/lib/firmware/ethercanfd_v1.0.5-20260829.bin
@@ -173,7 +173,7 @@ analyze-ethercan-pcap /var/lib/robopi/usbcan-snapshots/<快照目录>
 保存为 `hpm-uart-journal.txt`。
 
 配置、依赖、抓包过滤器和资源开销见
-`/usr/share/doc/robopi-analyze/usbcan-dump.md.gz`。
+`/usr/share/doc/roboparty-analyze/usbcan-dump.md.gz`。
 
 ## 稳定以太网 MAC
 
@@ -213,7 +213,7 @@ AIC8800 驱动：
 
 ```bash
 dpkg --print-architecture
-sudo apt install ./robopi-addon_*_arm64.deb
+sudo apt install ./roboparty-addon_*_arm64.deb
 ```
 
 安装后建议检查：
@@ -269,8 +269,8 @@ BSP 驱动不可用时，检查 BSP 内核配置和 `dmesg`；网络异常时，
 ## 卸载
 
 ```bash
-sudo apt remove robopi-addon
-sudo apt purge robopi-addon
+sudo apt remove roboparty-addon
+sudo apt purge roboparty-addon
 ```
 
 卸载脚本会停止灯带和风扇服务，不会修改 BSP 自带的内核模块。已有

@@ -1,12 +1,12 @@
-# robopi-addon
+# roboparty-addon
 
 [中文说明](README_CN.md)
 
-`robopi-addon` is the board support package for RoboPi RK3588S (ARM64). It can
+`roboparty-addon` is the board support package for RoboPi RK3588S (ARM64). It can
 be installed independently and does not require `roboparty-base`. It installs
 Wi-Fi, BMS GPIO, fan, and WS2812 board support tools under `/opt/roboparty`.
 EtherCAN maintenance and field diagnostics are provided separately by
-`robopi-analyze`. Frequently used addon commands are also exposed through
+`roboparty-analyze`. Frequently used addon commands are also exposed through
 `/usr/bin`.
 
 The package configures and enables several systemd services. Keep a serial
@@ -17,7 +17,7 @@ interrupt the current SSH session.
 ## Quick reference
 
 USB-CAN, HPM, CAN, and synchronized diagnostic commands below require the
-separate `robopi-analyze` package.
+separate `roboparty-analyze` package.
 
 | Task | Command or documentation |
 |---|---|
@@ -26,7 +26,7 @@ separate `robopi-analyze` package.
 | Control the fan | `sudo robopi-fan on\|off\|status` |
 | Check the Ethernet MAC | `robopi-ethernet-mac check` |
 | Review BMS GPIO behavior | [BMS GPIO](docs/bms-gpio.md) |
-| Capture a USB-CAN fault snapshot | `sudo usbcan-debug-snapshot` / `/usr/share/doc/robopi-analyze/usbcan-dump.md.gz` |
+| Capture a USB-CAN fault snapshot | `sudo usbcan-debug-snapshot` / `/usr/share/doc/roboparty-analyze/usbcan-dump.md.gz` |
 | Analyze a USB-CAN capture | `analyze-ethercan-pcap <pcap-file-or-directory>` |
 | Restart all four CAN links | `sudo robopi-can-restart` |
 | Capture four CAN links as ASC | `sudo robopi-can-capture /home/robo/can.asc` |
@@ -51,7 +51,7 @@ The package maintainer scripts apply the following default policy:
 | `robopi-sig-key.service` | Disabled | SIG/key diagnostic tool; conflicts with the BMS GPIO service |
 
 `usbcan-capture.service` and `hpm-log-capture.service` belong to
-`robopi-analyze`; this package does not manage their state.
+`roboparty-analyze`; this package does not manage their state.
 
 One-way UART3→UART7 forwarding is no longer a service of its own. It moved into
 `bms_daemon` (`roboparty-bms` ≥ 1.6.0), which taps the bytes it already reads
@@ -144,10 +144,10 @@ sudo robopi-fan status
 sudo robopi-fan off
 ```
 
-## EtherCAN and USB capture (robopi-analyze)
+## EtherCAN and USB capture (roboparty-analyze)
 
 The HPM is the onboard EtherCAN controller and connects to the RK3588 through
-an onboard USB hub. Install `robopi-analyze` for EtherCAN firmware, HPM
+an onboard USB hub. Install `roboparty-analyze` for EtherCAN firmware, HPM
 maintenance tools, and USB capture. Its firmware is installed at:
 
 ```text
@@ -196,7 +196,7 @@ analyze-ethercan-pcap /var/lib/robopi/usbcan-snapshots/<snapshot-directory>
 Starting USB capture also records the HPM log from `/dev/ttyS4` at 115200 baud.
 The snapshot stores that journal as `hpm-uart-journal.txt`.
 
-See `/usr/share/doc/robopi-analyze/usbcan-dump.md.gz` for configuration,
+See `/usr/share/doc/roboparty-analyze/usbcan-dump.md.gz` for configuration,
 dependencies, capture filters, and resource costs.
 
 ## Stable Ethernet MAC
@@ -240,7 +240,7 @@ and requires a RoboPi BSP containing the WS2812 and AIC8800 drivers:
 
 ```bash
 dpkg --print-architecture
-sudo apt install ./robopi-addon_*_arm64.deb
+sudo apt install ./roboparty-addon_*_arm64.deb
 ```
 
 Recommended post-installation checks:
@@ -297,8 +297,8 @@ current-boot logs for the Wi-Fi services.
 ## Uninstall
 
 ```bash
-sudo apt remove robopi-addon
-sudo apt purge robopi-addon
+sudo apt remove roboparty-addon
+sudo apt purge roboparty-addon
 ```
 
 The removal scripts stop the WS2812 and fan services. BSP-owned
