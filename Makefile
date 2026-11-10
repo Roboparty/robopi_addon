@@ -3,6 +3,7 @@
 
 CC ?= gcc
 CFLAGS ?= -O3 -Wall -Wextra
+ROBOOS_PREFIX ?= /opt/roboparty
 
 .PHONY: all clean install package
 
@@ -24,10 +25,10 @@ build/robopi-hw-test: src/hw_test.c
 # Stage the complete filesystem tree under DESTDIR. During Debian builds,
 # DESTDIR is debian/robopi-addon rather than the host system root.
 install: all
-	install -D -m 0755 scripts/robopi-ethernet-static.sh $(DESTDIR)/opt/roboparty/bin/robopi-ethernet-static
+	install -D -m 0755 scripts/robopi-ethernet-static.sh $(DESTDIR)$(ROBOOS_PREFIX)/bin/robopi-ethernet-static
 	install -D -m 0644 etc/systemd/system/robopi-ethernet-static.service $(DESTDIR)/lib/systemd/system/robopi-ethernet-static.service
 	# BMS GPIO daemon.
-	install -D -m 0755 scripts/robopi-bms-gpio.py $(DESTDIR)/opt/roboparty/bin/robopi-bms-gpio
+	install -D -m 0755 scripts/robopi-bms-gpio.py $(DESTDIR)$(ROBOOS_PREFIX)/bin/robopi-bms-gpio
 	install -D -m 0644 etc/systemd/system/robopi-bms-gpio.service $(DESTDIR)/lib/systemd/system/robopi-bms-gpio.service
 	install -D -m 0644 docs/bms-gpio.md $(DESTDIR)/usr/share/doc/robopi-addon/bms-gpio.md
 
@@ -35,9 +36,9 @@ install: all
 	install -D -m 0644 etc/udev/rules.d/70-robopi-usb-wifi-name.rules $(DESTDIR)/etc/udev/rules.d/70-robopi-usb-wifi-name.rules
 	install -D -m 0644 etc/udev/rules.d/90-robopi-usb-wifi-select.rules $(DESTDIR)/etc/udev/rules.d/90-robopi-usb-wifi-select.rules
 	install -D -m 0644 etc/systemd/system/robopi-wifi-autoselect.service $(DESTDIR)/lib/systemd/system/robopi-wifi-autoselect.service
-	mkdir -p $(DESTDIR)/opt/roboparty/bin $(DESTDIR)/lib/systemd/system
+	mkdir -p $(DESTDIR)$(ROBOOS_PREFIX)/bin $(DESTDIR)/lib/systemd/system
 
-	install -D -m 0755 scripts/robopi-usb-wifi-init.sh $(DESTDIR)/opt/roboparty/bin/robopi-usb-wifi-init
+	install -D -m 0755 scripts/robopi-usb-wifi-init.sh $(DESTDIR)$(ROBOOS_PREFIX)/bin/robopi-usb-wifi-init
 	install -D -m 0644 etc/systemd/system/robopi-usb-wifi.service $(DESTDIR)/lib/systemd/system/robopi-usb-wifi.service
 	install -D -m 0644 etc/modprobe.d/robopi-blacklist-onboard-wifi.conf $(DESTDIR)/etc/modprobe.d/robopi-blacklist-onboard-wifi.conf
 
@@ -46,25 +47,25 @@ install: all
 	install -D -m 0644 docs/wifi-selection.md $(DESTDIR)/usr/share/doc/robopi-addon/wifi-selection.md
 
 	# Install operator-facing commands under /opt, then expose stable PATH entries.
-	install -D -m 0755 scripts/robopi-wifi-select.sh $(DESTDIR)/opt/roboparty/bin/robopi-wifi-select
-	install -D -m 0755 build/robopi-ws2812 $(DESTDIR)/opt/roboparty/bin/robopi-ws2812
-	install -D -m 0755 build/robopi-sig-key $(DESTDIR)/opt/roboparty/bin/robopi-sig-key
-	install -D -m 0755 build/robopi-hw-test $(DESTDIR)/opt/roboparty/bin/robopi-hw-test
+	install -D -m 0755 scripts/robopi-wifi-select.sh $(DESTDIR)$(ROBOOS_PREFIX)/bin/robopi-wifi-select
+	install -D -m 0755 build/robopi-ws2812 $(DESTDIR)$(ROBOOS_PREFIX)/bin/robopi-ws2812
+	install -D -m 0755 build/robopi-sig-key $(DESTDIR)$(ROBOOS_PREFIX)/bin/robopi-sig-key
+	install -D -m 0755 build/robopi-hw-test $(DESTDIR)$(ROBOOS_PREFIX)/bin/robopi-hw-test
 	install -d $(DESTDIR)/usr/bin
-	ln -sf /opt/roboparty/bin/robopi-wifi-select $(DESTDIR)/usr/bin/robopi-wifi-select
-	ln -sf /opt/roboparty/bin/robopi-ws2812 $(DESTDIR)/usr/bin/robopi-ws2812
-	ln -sf /opt/roboparty/bin/robopi-sig-key $(DESTDIR)/usr/bin/robopi-sig-key
-	ln -sf /opt/roboparty/bin/robopi-hw-test $(DESTDIR)/usr/bin/robopi-hw-test
+	ln -sf $(ROBOOS_PREFIX)/bin/robopi-wifi-select $(DESTDIR)/usr/bin/robopi-wifi-select
+	ln -sf $(ROBOOS_PREFIX)/bin/robopi-ws2812 $(DESTDIR)/usr/bin/robopi-ws2812
+	ln -sf $(ROBOOS_PREFIX)/bin/robopi-sig-key $(DESTDIR)/usr/bin/robopi-sig-key
+	ln -sf $(ROBOOS_PREFIX)/bin/robopi-hw-test $(DESTDIR)/usr/bin/robopi-hw-test
 
 	# Board maintenance commands that are intentionally run by an operator.
 	install -D -m 0755 scripts/robopi-ethernet-mac.sh \
-		$(DESTDIR)/opt/roboparty/bin/robopi-ethernet-mac
+		$(DESTDIR)$(ROBOOS_PREFIX)/bin/robopi-ethernet-mac
 	install -D -m 0755 scripts/robopi-fan.sh \
-		$(DESTDIR)/opt/roboparty/bin/robopi-fan
+		$(DESTDIR)$(ROBOOS_PREFIX)/bin/robopi-fan
 	install -D -m 0755 scripts/robopi-pmic-ota.py \
-		$(DESTDIR)/opt/roboparty/bin/robopi-pmic-ota
+		$(DESTDIR)$(ROBOOS_PREFIX)/bin/robopi-pmic-ota
 	install -D -m 0755 scripts/robopi-pmic-monitor.py \
-		$(DESTDIR)/opt/roboparty/bin/robopi-pmic-monitor
+		$(DESTDIR)$(ROBOOS_PREFIX)/bin/robopi-pmic-monitor
 	install -D -m 0644 etc/systemd/system/robopi-pmic-monitor.service \
 		$(DESTDIR)/lib/systemd/system/robopi-pmic-monitor.service
 	install -D -m 0644 etc/default/robopi-pmic-monitor \
@@ -73,16 +74,16 @@ install: all
 		$(DESTDIR)/usr/share/doc/robopi-addon/pmic-pinout-functions.md
 	for file in manifest.json boot.bin ChargeBAT.bin; do \
 		install -D -m 0644 firmware/pmic/candidate/stm32f103c8/$$file \
-			$(DESTDIR)/opt/roboparty/share/pmic/candidate/stm32f103c8/$$file; \
+			$(DESTDIR)$(ROBOOS_PREFIX)/share/pmic/candidate/stm32f103c8/$$file; \
 	done
 	for file in manifest.json boot.bin ChargeBAT_GD32.bin; do \
 		install -D -m 0644 firmware/pmic/candidate/gd32f503/$$file \
-			$(DESTDIR)/opt/roboparty/share/pmic/candidate/gd32f503/$$file; \
+			$(DESTDIR)$(ROBOOS_PREFIX)/share/pmic/candidate/gd32f503/$$file; \
 	done
-	ln -sf /opt/roboparty/bin/robopi-ethernet-mac $(DESTDIR)/usr/bin/robopi-ethernet-mac
-	ln -sf /opt/roboparty/bin/robopi-fan $(DESTDIR)/usr/bin/robopi-fan
-	ln -sf /opt/roboparty/bin/robopi-pmic-ota $(DESTDIR)/usr/bin/robopi-pmic-ota
-	ln -sf /opt/roboparty/bin/robopi-pmic-monitor $(DESTDIR)/usr/bin/robopi-pmic-monitor
+	ln -sf $(ROBOOS_PREFIX)/bin/robopi-ethernet-mac $(DESTDIR)/usr/bin/robopi-ethernet-mac
+	ln -sf $(ROBOOS_PREFIX)/bin/robopi-fan $(DESTDIR)/usr/bin/robopi-fan
+	ln -sf $(ROBOOS_PREFIX)/bin/robopi-pmic-ota $(DESTDIR)/usr/bin/robopi-pmic-ota
+	ln -sf $(ROBOOS_PREFIX)/bin/robopi-pmic-monitor $(DESTDIR)/usr/bin/robopi-pmic-monitor
 
 	# SIG diagnostic service.
 	install -D -m 0644 etc/systemd/system/robopi-sig-key.service \

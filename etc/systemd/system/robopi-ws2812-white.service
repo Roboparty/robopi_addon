@@ -4,8 +4,9 @@ After=local-fs.target
 
 [Service]
 Type=oneshot
-ExecStart=/opt/roboparty/bin/robopi-ws2812 solid 30 30 30
-ExecStop=/opt/roboparty/bin/robopi-ws2812 off
+EnvironmentFile=-/etc/roboos/env
+ExecStart=/bin/bash -lc 'exec "$${ROBOOS_PREFIX:-/opt/roboparty}/bin/robopi-ws2812" solid 30 30 30'
+ExecStop=/bin/bash -lc 'exec "$${ROBOOS_PREFIX:-/opt/roboparty}/bin/robopi-ws2812" off'
 RemainAfterExit=yes
 
 [Install]

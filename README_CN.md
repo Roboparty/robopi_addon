@@ -4,7 +4,7 @@
 
 `robopi-addon` 是 RoboPi RK3588S（ARM64）的板级支持包，可独立安装，不强制依赖
 `roboparty-base`。它把 Wi-Fi、BMS GPIO、风扇和 WS2812 板级工具安装到
-`/opt/roboparty`；EtherCAN 维护工具和现场诊断工具由独立的 `roboparty-analyze`
+`${ROBOOS_PREFIX:-/opt/roboparty}`；EtherCAN 维护工具和现场诊断工具由独立的 `roboparty-analyze`
 软件包提供。常用的 addon 命令也有 `/usr/bin` 入口。
 
 这个包会配置并启用部分 systemd 服务。首次安装或升级前，建议保留串口或另一条
@@ -39,8 +39,8 @@
 本包从修正后的
 [`roboparty_pmic v0.1.11 工程预发布版`](https://github.com/Roboparty/roboparty_pmic/releases/tag/v0.1.11)
 收录 STM32F103C8 与 GD32F503VET6 两套 bootloader、应用镜像和 SHA-256 清单，
-分别安装在 `/opt/roboparty/share/pmic/candidate/stm32f103c8/` 和
-`/opt/roboparty/share/pmic/candidate/gd32f503/`。v0.1.8 的 GD32 镜像版本串有误，
+分别安装在 `${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/stm32f103c8/` 和
+`${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/gd32f503/`。v0.1.8 的 GD32 镜像版本串有误，
 已弃用。`-left` 是历史构建后缀，不代表第二颗 MCU。
 **未完成量产放行**；安装本包不会自动烧录 PMIC。
 
@@ -75,9 +75,9 @@ SWD 逐脚测试确认 PA4 红、PA5 绿、PA6 电池绿、PA7 电池红；20V �
 
 ```bash
 robopi-pmic-ota verify-bundle \
-  --bundle /opt/roboparty/share/pmic/candidate/stm32f103c8/manifest.json
+  --bundle ${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/stm32f103c8/manifest.json
 robopi-pmic-ota verify-bundle \
-  --bundle /opt/roboparty/share/pmic/candidate/gd32f503/manifest.json
+  --bundle ${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/gd32f503/manifest.json
 ```
 
 包内 `0.1.10` 工程版已实现 USART3 串口 OTA：新 bootloader 首次仍需
@@ -86,7 +86,7 @@ robopi-pmic-ota verify-bundle \
 
 ```bash
 robopi-pmic-ota flash-stm32 --port /dev/ttyUSB0 \
-  --bin /opt/roboparty/share/pmic/candidate/stm32f103c8/ChargeBAT.bin \
+  --bin ${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/stm32f103c8/ChargeBAT.bin \
   --uid 0669FF555553787287104058
 ```
 
@@ -165,7 +165,7 @@ sudo robopi-wifi-select onboard
 ## BMS GPIO
 
 `robopi-bms-gpio.service` 只读取 `/tmp/bms.sock`，不会向 BMS 串口写命令。BMS
-集成功能需要 `roboparty-base` 提供的 `/opt/roboparty/include/bms_driver.hpp` 和
+集成功能需要 `roboparty-base` 提供的 `${ROBOOS_PREFIX:-/opt/roboparty}/include/bms_driver.hpp` 和
 `bms.service`；未安装 base 时，该服务通过 systemd 条件检查跳过，不影响 addon 的
 其他功能或独立单元测试。它控制：
 
@@ -223,7 +223,7 @@ HPM 是板载 EtherCAN 控制器，通过板载 USB Hub 接入 RK3588。EtherCAN
 HPM 维护工具和 USB 抓包功能需要另行安装 `roboparty-analyze`。其固件位于：
 
 ```text
-/opt/roboparty/lib/firmware/ethercanfd_v1.0.5-20260829.bin
+${ROBOOS_PREFIX:-/opt/roboparty}/lib/firmware/ethercanfd_v1.0.5-20260829.bin
 ```
 
 `usb_hub_reset`（GPIO4_B5）是板载 HPM 所在 USB Hub 的硬复位控制：高电平关闭
@@ -245,7 +245,7 @@ lsusb -d 1209:2323
 
 不要把 `brightness` 长时间留在 `1`，否则 HPM 会一直离线。
 
-固件刷写脚本 `/opt/roboparty/bin/flash_hpm.sh` 属于维护入口，应在明确固件和设备
+固件刷写脚本 `${ROBOOS_PREFIX:-/opt/roboparty}/bin/flash_hpm.sh` 属于维护入口，应在明确固件和设备
 状态后手动使用。
 
 USB 抓包默认关闭。问题复现时可把未压缩环形 pcap 保存在 `/run/usbcan`，默认上限

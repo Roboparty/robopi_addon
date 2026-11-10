@@ -7,7 +7,8 @@ StartLimitBurst=3
 
 [Service]
 Type=oneshot
-ExecStart=/opt/roboparty/bin/robopi-ethernet-static
+EnvironmentFile=-/etc/roboos/env
+ExecStart=/bin/bash -lc 'exec "$${ROBOOS_PREFIX:-/opt/roboparty}/bin/robopi-ethernet-static"'
 RemainAfterExit=yes
 Restart=on-failure
 RestartSec=10s

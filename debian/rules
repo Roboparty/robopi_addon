@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+INSTALL_PREFIX ?= /opt/roboparty
+
 include /usr/share/dpkg/architecture.mk
 
 ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
@@ -20,7 +22,7 @@ override_dh_auto_clean:
 	$(MAKE) clean
 
 override_dh_auto_install:
-	$(MAKE) DESTDIR=$(CURDIR)/debian/robopi-addon VERSION=$(VERSION) install
+	$(MAKE) DESTDIR=$(CURDIR)/debian/robopi-addon VERSION=$(VERSION) ROBOOS_PREFIX=$(INSTALL_PREFIX) install
 
 override_dh_installsystemd:
 	dh_installsystemd --no-enable --no-start

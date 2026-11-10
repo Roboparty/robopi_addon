@@ -4,7 +4,7 @@
 
 `robopi-addon` is the board support package for RoboPi RK3588S (ARM64). It can
 be installed independently and does not require `roboparty-base`. It installs
-Wi-Fi, BMS GPIO, fan, and WS2812 board support tools under `/opt/roboparty`.
+Wi-Fi, BMS GPIO, fan, and WS2812 board support tools under `${ROBOOS_PREFIX:-/opt/roboparty}`.
 EtherCAN maintenance and field diagnostics are provided separately by
 `roboparty-analyze`. Frequently used addon commands are also exposed through
 `/usr/bin`.
@@ -43,7 +43,7 @@ The current pin mapping, feature inventory, and verification status are in the
 The package installs STM32F103C8 and GD32F503VET6 bootloader/application
 bundles from the
 [PMIC v0.1.11 engineering release](https://github.com/Roboparty/roboparty_pmic/releases/tag/v0.1.11),
-each with a SHA-256 manifest under `/opt/roboparty/share/pmic/candidate/`.
+each with a SHA-256 manifest under `${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/`.
 The earlier v0.1.8 GD32 asset had the wrong version string and is superseded.
 The `-left` firmware version suffix is a historical build name, not a second MCU.
 These are not production-qualified firmware. Installing this
@@ -75,9 +75,9 @@ Validate either installed image pair without opening a serial device:
 
 ```bash
 robopi-pmic-ota verify-bundle \
-  --bundle /opt/roboparty/share/pmic/candidate/stm32f103c8/manifest.json
+  --bundle ${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/stm32f103c8/manifest.json
 robopi-pmic-ota verify-bundle \
-  --bundle /opt/roboparty/share/pmic/candidate/gd32f503/manifest.json
+  --bundle ${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/gd32f503/manifest.json
 ```
 
 The packaged `0.1.10` STM32 application supports USART3 serial OTA. Serial
@@ -89,7 +89,7 @@ installed application image:
 
 ```bash
 robopi-pmic-ota flash-stm32 --port /dev/ttyUSB0 \
-  --bin /opt/roboparty/share/pmic/candidate/stm32f103c8/ChargeBAT.bin \
+  --bin ${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/stm32f103c8/ChargeBAT.bin \
   --uid 0669FF555553787287104058
 ```
 
@@ -182,7 +182,7 @@ identification, and recovery procedures.
 
 `robopi-bms-gpio.service` only reads `/tmp/bms.sock`; it never sends commands
 to the BMS serial port. BMS integration needs
-`/opt/roboparty/include/bms_driver.hpp` and `bms.service` from
+`${ROBOOS_PREFIX:-/opt/roboparty}/include/bms_driver.hpp` and `bms.service` from
 `roboparty-base`. Without base, a systemd condition skips this service without
 affecting other addon features or standalone unit tests. It controls:
 
@@ -246,7 +246,7 @@ an onboard USB hub. Install `roboparty-analyze` for EtherCAN firmware, HPM
 maintenance tools, and USB capture. Its firmware is installed at:
 
 ```text
-/opt/roboparty/lib/firmware/ethercanfd_v1.0.5-20260829.bin
+${ROBOOS_PREFIX:-/opt/roboparty}/lib/firmware/ethercanfd_v1.0.5-20260829.bin
 ```
 
 `usb_hub_reset` (GPIO4_B5) controls the hardware reset for the USB hub that
@@ -271,7 +271,7 @@ lsusb -d 1209:2323
 Do not leave `brightness` at `1`; the HPM remains offline while reset is
 asserted.
 
-The firmware flasher, `/opt/roboparty/bin/flash_hpm.sh`, is a maintenance
+The firmware flasher, `${ROBOOS_PREFIX:-/opt/roboparty}/bin/flash_hpm.sh`, is a maintenance
 interface and should only be run after confirming the firmware image and
 device state.
 

@@ -4,7 +4,8 @@ Description=RoboPi read-only PMIC status monitor
 [Service]
 Type=simple
 EnvironmentFile=-/etc/default/robopi-pmic-monitor
-ExecStart=/usr/bin/python3 /opt/roboparty/bin/robopi-pmic-monitor
+EnvironmentFile=-/etc/roboos/env
+ExecStart=/bin/bash -lc 'exec /usr/bin/python3 "$${ROBOOS_PREFIX:-/opt/roboparty}/bin/robopi-pmic-monitor"'
 Restart=on-failure
 RestartSec=5
 User=root

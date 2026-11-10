@@ -5,7 +5,8 @@ StartLimitIntervalSec=0
 
 [Service]
 Type=simple
-ExecStart=/opt/roboparty/bin/robopi-hw-test
+EnvironmentFile=-/etc/roboos/env
+ExecStart=/bin/bash -lc 'exec "$${ROBOOS_PREFIX:-/opt/roboparty}/bin/robopi-hw-test"'
 Restart=on-failure
 RestartSec=5
 

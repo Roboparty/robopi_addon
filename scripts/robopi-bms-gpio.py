@@ -10,6 +10,9 @@ import signal
 import socket
 import struct
 import time
+from pathlib import Path
+
+ROBOOS_PREFIX = Path(os.environ.get("ROBOOS_PREFIX") or Path(__file__).resolve().parent.parent)
 
 # Packed BatteryStatus ABI deployed on RoboPi (little endian, 126 bytes).
 # The older 121-byte ABI has the same package version and is NOT compatible.
@@ -135,7 +138,7 @@ def monitor(path, outputs, stopping, retry=1.0, poll=0.5):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--socket', default='/tmp/bms.sock')
-    parser.add_argument('--header', default='/opt/roboparty/include/bms_driver.hpp')
+    parser.add_argument('--header', default=str(ROBOOS_PREFIX / 'include/bms_driver.hpp'))
     parser.add_argument('--out1', default='/sys/class/leds/dual_battery_b0/brightness')
     parser.add_argument('--out2', default='/sys/class/leds/dual_battery_c2/brightness')
     parser.add_argument('--check', action='store_true', help='validate ABI and paths without GPIO writes')

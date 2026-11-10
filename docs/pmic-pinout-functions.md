@@ -18,7 +18,7 @@
 | 更新方式 | 首次通过 CMSIS-DAP/SWD 安装 bootloader；后续 USART3 串口 OTA，支持中断后重传，不支持自动回滚 |
 
 安装 addon 不会自动烧录 PMIC。可运行
-`robopi-pmic-ota verify-bundle --bundle /opt/roboparty/share/pmic/candidate/stm32f103c8/manifest.json`
+`robopi-pmic-ota verify-bundle --bundle ${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/stm32f103c8/manifest.json`
 核对镜像 SHA-256、Flash 边界、向量和内嵌版本号。`robopi-pmic-ota inspect --port /dev/ttyUSB0`
 通过 USART3 只读查询芯片 UID 和固件版本。
 

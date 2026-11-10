@@ -1,6 +1,5 @@
 [Unit]
 Description=RoboPi battery GPIO control from TWS Unix socket
-ConditionPathExists=/opt/roboparty/include/bms_driver.hpp
 Wants=bms.service
 After=bms.service robopi-hw-test.service robopi-sig-key.service
 Conflicts=robopi-hw-test.service robopi-sig-key.service
@@ -9,7 +8,9 @@ StartLimitBurst=3
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /opt/roboparty/bin/robopi-bms-gpio
+EnvironmentFile=-/etc/roboos/env
+ExecCondition=/bin/bash -lc 'test -f "$${ROBOOS_PREFIX:-/opt/roboparty}/include/bms_driver.hpp"'
+ExecStart=/bin/bash -lc 'exec /usr/bin/python3 "$${ROBOOS_PREFIX:-/opt/roboparty}/bin/robopi-bms-gpio"'
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=5
