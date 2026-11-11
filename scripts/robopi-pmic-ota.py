@@ -133,7 +133,7 @@ def check_bms_forward(port):
                        if "=" in line and not line.lstrip().startswith("#"))
     except FileNotFoundError:
         return
-    enabled = entries.get("FORWARD_ENABLE", "1").lower() not in ("0", "false", "no", "off")
+    enabled = entries.get("FORWARD_ENABLE", "0").lower() not in ("0", "false", "no", "off")
     destination = entries.get("FORWARD_PORT_B", "/dev/ttyS7").strip("\"'")
     if enabled and os.path.realpath(port) == os.path.realpath(destination):
         raise RuntimeError(f"{port} is the active BMS forwarding destination")

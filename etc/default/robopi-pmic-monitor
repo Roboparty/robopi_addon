@@ -1,4 +1,4 @@
-# PMIC host UART. Set this only after verifying the physical two-way link.
-# The current BMS daemon forwards raw bytes to /dev/ttyS7 by default; the
-# monitor refuses that port until FORWARD_ENABLE=0 in /etc/default/bms_daemon.
-PMIC_PORT=
+# PMIC host UART is USART1 on PA9/PA10, wired to RK3588 UART7 /dev/ttyS7.
+# BMS 1.6.5 defaults FORWARD_ENABLE=0, so the port is free for the monitor.
+# If an older /etc/default/bms_daemon still forwards to S7, set it to 0 first.
+PMIC_PORT=/dev/ttyS7

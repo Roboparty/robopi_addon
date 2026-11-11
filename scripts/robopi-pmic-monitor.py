@@ -36,7 +36,7 @@ def env_file(path):
 
 def check_forward_conflict(port, config_path="/etc/default/bms_daemon"):
     config = env_file(config_path)
-    enabled = config.get("FORWARD_ENABLE", "1").lower() not in ("0", "false", "no", "off")
+    enabled = config.get("FORWARD_ENABLE", "0").lower() not in ("0", "false", "no", "off")
     destination = config.get("FORWARD_PORT_B", "/dev/ttyS7")
     if enabled and os.path.realpath(port) == os.path.realpath(destination):
         raise RuntimeError(

@@ -4,19 +4,19 @@
   "target": "stm32f103c8",
   "version": "0.1.10",
   "release_status": "engineering-candidate",
-  "source_release": "v0.1.11",
-  "source_commit": "874a80a9f6a1d0e8ef83e123c31aa46c75e0579c",
+  "source_release": "v0.1.13",
+  "source_commit": "dc5a85b3a68d5f194a3c9fed4fcd33874ae7e17b",
   "ota_supported": true,
   "images": {
     "boot": {
       "file": "boot.bin",
       "load_address": "0x08000000",
-      "sha256": "c9eb08ff36bdd98c684f68718f3b130bf7abed17404b9e24f901b5ca47640629"
+      "sha256": "af34543ad72ded2ef77638cee67e42382c2b1eae23117c7ac62fc0f3f146f657"
     },
     "app": {
       "file": "ChargeBAT.bin",
       "load_address": "0x08001000",
-      "sha256": "97610bcb09917f8fa8fd6ad1dd2e3b759549ebeb3f3f27ed28a86b685bf989be"
+      "sha256": "89b0c8b087b43d90715d9164f97e6d38448d31e0facb1be634b485a3272a330f"
     }
   }
 }

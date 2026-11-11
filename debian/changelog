@@ -1,3 +1,13 @@
+robopi-addon (1.8.22-1) stable; urgency=medium
+
+  * Bundle PMIC v0.1.13 STM32F103C8 candidate; the control UART moves to
+    USART1 PA9/PA10 (RK3588 UART7).
+  * Align the PMIC monitor and OTA defaults with BMS 1.6.5 forwarding-off;
+    set PMIC_PORT=/dev/ttyS7 for the USART1 host link.
+  * Update the PMIC pinout and operator documentation.
+
+ -- wentywenty <2321901849@qq.com>  Wed, 11 Nov 2026 23:21:52 +0800
+
 robopi-addon (1.8.21-1) stable; urgency=medium
 
   * Honor ROBOOS_PREFIX for installed tools and systemd units.

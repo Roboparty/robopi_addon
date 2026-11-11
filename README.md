@@ -42,18 +42,22 @@ The current pin mapping, feature inventory, and verification status are in the
 
 The package installs STM32F103C8 and GD32F503VET6 bootloader/application
 bundles from the
-[PMIC v0.1.11 engineering release](https://github.com/Roboparty/roboparty_pmic/releases/tag/v0.1.11),
-each with a SHA-256 manifest under `${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/`.
+[PMIC v0.1.13 engineering release](https://github.com/Roboparty/roboparty_pmic/releases/tag/v0.1.13)
+for STM32F103C8; the GD32F503 candidate remains at v0.1.11. Each bundle
+has a SHA-256 manifest under `${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/`.
 The earlier v0.1.8 GD32 asset had the wrong version string and is superseded.
 The `-left` firmware version suffix is a historical build name, not a second MCU.
 These are not production-qualified firmware. Installing this
 package never flashes the PMIC.
 
 Use `robopi-pmic-ota inspect --port /dev/ttyUSB0` for read-only UID and
-firmware-version queries on the PMIC USART3 port (115200 8N1). The STM32
+firmware-version queries on the PMIC USART1 port (PA9/PA10, RK3588 UART7 `/dev/ttyS7`; 115200 8N1). The STM32
 candidate uses internal Flash serial OTA with a resident bootloader. Its first
 installation requires SWD: `boot.bin` at `0x08000000`, `ChargeBAT.bin` at
 `0x08001000`.
+The v0.1.13 STM32 build moves the host/control UART to USART1 on PA9/PA10.
+The 0.1.8-left notes below describe the earlier USART3 wiring.
+
 In `0.1.8-left`, PB4 is unused and the BMS driver/thread and USART1 are not
 built or initialized. The charge thread automatically enables PB3 EN and PA3
 ICTRL after three valid ADC samples when the input is 16-32 V, CH224 reports
@@ -80,7 +84,7 @@ robopi-pmic-ota verify-bundle \
   --bundle ${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/gd32f503/manifest.json
 ```
 
-The packaged `0.1.10` STM32 application supports USART3 serial OTA. Serial
+The packaged `0.1.10` STM32 application supports USART1 serial OTA. Serial
 transfer, application-initiated entry, and recovery after an interrupted
 transfer passed with byte-for-byte SWD readback. The suffix-free
 `FW_VER:0.1.10;` passed 6/6 read-only HIL after OTA. For subsequent manual
@@ -94,8 +98,8 @@ robopi-pmic-ota flash-stm32 --port /dev/ttyUSB0 \
 ```
 
 If transfer was interrupted and the board remains in its bootloader, repeat
-with `--recover` instead of `--uid`. The command refuses `/dev/ttyS7` while
-the BMS daemon forwards to it. The bootloader has no second image slot or
+with `--recover` instead of `--uid`. BMS 1.6.5 defaults `FORWARD_ENABLE=0`;
+if an older config still forwards to `/dev/ttyS7`, disable it first. The bootloader has no second image slot or
 automatic rollback; keep SWD available for service recovery. Battery charging
 and output polarity remain unqualified.
 
@@ -113,12 +117,11 @@ then run `sudo systemctl enable --now robopi-pmic-monitor.service`. It polls
 and communication errors to `/run/roboparty/pmic-status.json` and the journal.
 Stop the service before using `robopi-pmic-ota inspect` on the same serial port.
 
-The BMS daemon currently forwards raw bytes one-way from `/dev/ttyS3` to
-`/dev/ttyS7`. The monitor refuses S7 while that forwarding is configured.
-If S7 is the PMIC's bidirectional host port, set `FORWARD_ENABLE=0` in
-`/etc/default/bms_daemon` and restart `bms.service` before enabling the monitor.
-Concurrent forwarding and PMIC queries need one serial owner and protocol
-arbitration; the current stack does not provide either. The older `0.1.8-left`
+BMS 1.6.5 defaults `FORWARD_ENABLE=0`, so `/dev/ttyS7` is free for the PMIC
+host port. If an older `/etc/default/bms_daemon` still forwards raw bytes from
+`/dev/ttyS3` to `/dev/ttyS7`, set `FORWARD_ENABLE=0` and restart `bms.service`
+before enabling the monitor. The monitor and OTA tool still refuse S7 while
+forwarding is enabled; one serial owner is required. The older `0.1.8-left`
 image omits `CHG_FAULT` from `CHRG_INFO`, so its `mcu_fault` is `null`.
 The packaged `0.1.10` and `0.1.1-gd32` candidates expose `CHG_FAULT:0/1;`.
 The previous STM32 image was flashed, read back byte for byte, and passed 6/6 serial checks on

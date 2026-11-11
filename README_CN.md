@@ -37,14 +37,15 @@
 `/usr/share/doc/robopi-addon/pmic-pinout-functions.md`。
 
 本包从修正后的
-[`roboparty_pmic v0.1.11 工程预发布版`](https://github.com/Roboparty/roboparty_pmic/releases/tag/v0.1.11)
-收录 STM32F103C8 与 GD32F503VET6 两套 bootloader、应用镜像和 SHA-256 清单，
+[`roboparty_pmic v0.1.13 工程发布版`](https://github.com/Roboparty/roboparty_pmic/releases/tag/v0.1.13)
+收录 STM32F103C8 固件；GD32F503VET6 仍沿用 v0.1.11 候选（v0.1.13 未发布 GD32）。
+两套 bootloader、应用镜像和 SHA-256 清单
 分别安装在 `${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/stm32f103c8/` 和
 `${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/gd32f503/`。v0.1.8 的 GD32 镜像版本串有误，
 已弃用。`-left` 是历史构建后缀，不代表第二颗 MCU。
 **未完成量产放行**；安装本包不会自动烧录 PMIC。
 
-先确认 PMIC 的 USART3 串口设备（115200 8N1），再只读查询：
+先确认 PMIC 的 USART1 串口设备（PA9/PA10，RK3588 UART7 `/dev/ttyS7`，115200 8N1），再只读查询：
 
 ```bash
 robopi-pmic-ota inspect --port /dev/ttyUSB0
@@ -53,6 +54,9 @@ robopi-pmic-ota inspect --port /dev/ttyUSB0
 新版用内部 Flash 串口 OTA，首次安装新 bootloader 仍需用 CMSIS-DAP/SWD 烧录
 `stm32f103c8/boot.bin` 和 `stm32f103c8/ChargeBAT.bin`，
 地址分别为 `0x08000000` 和 `0x08001000`。
+v0.1.13 起控制口改为 USART1（PA9/PA10），USART3 不再使用；下面
+`0.1.8-left` 的说明仅适用于旧镜像。
+
 `0.1.8-left` 不使用 PB4，也不编译 BMS 通信或初始化 USART1（PA9/PA10）。
 固件在 ADC 连续采样有效、输入为 16–32V、CH224 能读到适配器电流且无故障时
 自动使能 PB3 `EN` 与 PA3 `ICTRL`；需要电池包自带独立充满截止保护。
@@ -80,7 +84,7 @@ robopi-pmic-ota verify-bundle \
   --bundle ${ROBOOS_PREFIX:-/opt/roboparty}/share/pmic/candidate/gd32f503/manifest.json
 ```
 
-包内 `0.1.10` 工程版已实现 USART3 串口 OTA：新 bootloader 首次仍需
+包内 `0.1.10` 工程版已实现 USART1 串口 OTA：新 bootloader 首次仍需
 通过 SWD 安装。后续更新时先停止 PMIC 监控服务、确认没有带电池充电，再显式提供
 新版应用镜像，人工执行：
 
@@ -91,7 +95,7 @@ robopi-pmic-ota flash-stm32 --port /dev/ttyUSB0 \
 ```
 
 更新中断后设备留在 bootloader，用相同命令加 `--recover` 并省略 `--uid` 重传。
-命令会拒绝使用仍被 BMS 转发占用的 S7。实板已验证串口传输、应用自行进入更新、
+BMS 1.6.5 默认 `FORWARD_ENABLE=0`；若旧配置仍在转发，先关闭再使用 S7。实板已验证串口传输、应用自行进入更新、
 中断恢复与 SWD 逐字节回读；去掉 `left` 后的 `FW_VER:0.1.10;` 也已通过串口 OTA
 烧录及 6/6 只读 HIL。没有双镜像存储，也不能自动回滚旧版；保留 SWD 维修
 入口。带电池充电闭环、输出极性和多板测试尚未完成，不能标注为量产固件。
@@ -108,11 +112,10 @@ USART0（PA9/PA10，115200 8N1）可查询 `FW_VER:0.1.1-gd32;` 和 96 位芯片
 `/run/roboparty/pmic-status.json`；`journalctl -u robopi-pmic-monitor` 可查看采样日志。
 运行维护命令 `robopi-pmic-ota inspect` 前先停止服务，避免串口争用。
 
-现有 BMS 默认从 `/dev/ttyS3` 单向转发原始字节到 `/dev/ttyS7`。当前没有
-查询仲裁，监控服务会拒绝使用仍被 BMS 转发占用的 S7。若 PMIC 的双向主机串口
-实际是 S7，必须先在 `/etc/default/bms_daemon` 设置 `FORWARD_ENABLE=0` 并重启
-`bms.service`，确认不再占用 S7 后，才能启用监控。需要同时保留转发与 PMIC
-交互时，应先增加单一串口所有者及协议仲裁，不能让两个进程并发写 S7。
+BMS 1.6.5 默认 `FORWARD_ENABLE=0`，`/dev/ttyS7` 可直接作为 PMIC 主机口使用。
+若旧配置仍从 `/dev/ttyS3` 单向转发到 S7，先在 `/etc/default/bms_daemon`
+设置 `FORWARD_ENABLE=0` 并重启 `bms.service`，再启用监控。转发开启时，
+监控和 OTA 命令会拒绝 S7；两者仍要求单一串口所有者。
 旧版已烧录的 `0.1.8-left` 的 `CHRG_INFO` 不含内部故障位，因此 JSON 的
 `mcu_fault` 为 `null`（未知）；包内 `0.1.10` 和 `0.1.1-gd32` 镜像会回
 `CHG_FAULT:0/1;`；STM32 新版已烧录，GD32 仍未实板验证。串口读写错误会明确置 `connected=false`
